@@ -1,0 +1,8 @@
+syntax: glob
+
+*.DotSettings.user
+WootShifter_App.vcxproj.user
+WootShifter_App.vcxproj.filters
+x64
+.vs
+.idea

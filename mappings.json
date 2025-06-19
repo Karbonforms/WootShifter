@@ -1,0 +1,26 @@
+[
+    {
+        "DeviceId": "10968481425102",
+        "IsActive": true,
+        "Path": "Discordass",
+        "Profile": "Typing Profile"
+    },
+    {
+        "DeviceId": "10968481425102",
+        "IsActive": true,
+        "Path": "G:\\DEV\\WootShifter\\WootShifterWPF\\bin\\Release\\net9.0-windows\\WootShifterWPF.exe",
+        "Profile": "GAMMA"
+    },
+    {
+        "DeviceId": "10968481425102",
+        "IsActive": true,
+        "Path": "DEFAULT",
+        "Profile": "Typing Profile"
+    },
+    {
+        "DeviceId": "NO DEVICE ID",
+        "IsActive": true,
+        "Path": "NO EXE PATH",
+        "Profile": "NO PROFILE"
+    }
+]
