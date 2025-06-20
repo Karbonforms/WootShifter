@@ -1,8 +1,5 @@
-
-#include "MainComponent.h"
 #include "Main.h"
-#include "WootingDB.h"
-#include <wooting-rgb-sdk.h>
+#include "MainComponent.h"
 
 #include "MainWindow.h"
 #include "Settings.h"
@@ -16,17 +13,14 @@ public:
     const String getApplicationName() override       { return ProjectInfo::projectName; }
     const String getApplicationVersion() override    { return ProjectInfo::versionString; }
     bool moreThanOneInstanceAllowed() override       { return true; }
-
-
+    
     void initialise (const String& /*commandLine*/) override
     {
-        // controller.start();
         Controller::getInstance()->start();
-        mainWindow.reset (new MainWindow (getApplicationName()));
+        _mainWindow.reset (new MainWindow (getApplicationName()));
         
-        
-        tray_icon.addChangeListener(mainWindow.get());
-        mainWindow->addChangeListener(&tray_icon);
+        _trayIcon.addChangeListener(_mainWindow.get());
+        _mainWindow->addChangeListener(&_trayIcon);
     }
 
     void shutdown() override
@@ -34,7 +28,7 @@ public:
         // Add your application's shutdown code here..
         Controller::deleteInstance();
         Settings::deleteInstance();
-        mainWindow = nullptr; // (deletes our window)
+        _mainWindow = nullptr; // (deletes our window)
     }
 
     void systemRequestedQuit() override
@@ -52,10 +46,9 @@ public:
     }
 
 private:
-    static juce::PropertiesFile::Options settingsOptions;
-    //Controller controller;
-    std::unique_ptr<MainWindow> mainWindow;
-    TrayIcon tray_icon;
+    // static juce::PropertiesFile::Options settingsOptions;
+    std::unique_ptr<MainWindow> _mainWindow;
+    TrayIcon _trayIcon;
 };
 
 // This macro generates the main() routine that launches the app.

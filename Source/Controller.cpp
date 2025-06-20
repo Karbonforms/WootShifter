@@ -28,6 +28,11 @@ Controller::Controller()
 
     const auto profilesByDevice = WootingDB::retrieveProfileData();
 
+    if (profilesByDevice.empty())
+    {
+        JUCEApplication::quit();
+    }
+    
     assignProfilesToDevices(profilesByDevice);
 
     const auto appdir = Settings::getApplicationDataDirectory();

@@ -4,13 +4,13 @@
 
 using namespace juce;
 
-MainWindow::MainWindow(const juce::String& name): DocumentWindow(name,
-    juce::Desktop::getInstance().getDefaultLookAndFeel()
-                                .findColour(backgroundColourId),
-    allButtons)
+MainWindow::MainWindow(const String& name)
+: DocumentWindow( name
+                , Desktop::getInstance().getDefaultLookAndFeel().findColour(backgroundColourId)
+                , allButtons )
 {
     setUsingNativeTitleBar(true);
-    // maincomp = new MainComponent(controller);
+
     setContentOwned(new MainComponent(), true);
 
     setResizable(true, true);

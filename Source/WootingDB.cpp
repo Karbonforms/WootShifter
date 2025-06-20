@@ -21,7 +21,18 @@ ProfilesByDevice WootingDB::retrieveProfileData()
 
     if (!status.ok())
     {
-        Logger::outputDebugString("Failed to open database: " + status.ToString());
+        auto title = "Failed to open Wootility database!";
+
+        String msg;
+        if (status.IsIOError())
+        {
+            msg << "Wootility must not be running!\n\n";
+        }
+
+        msg << "Error: " << status.ToString();
+        
+        AlertWindow::showMessageBox(AlertWindow::WarningIcon, title, msg);
+        Logger::outputDebugString(title + msg);
         return {};
     }
     
