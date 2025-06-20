@@ -4,7 +4,7 @@
 using namespace juce;
 
 MainComponent::MainComponent()
-: _mappingListBoxModel(_listBox)
+: _mappingListBoxModel(&_listBox)
 {
     setSize(600, 400);
 

@@ -1,5 +1,4 @@
 ﻿#include "MappingListBoxModel.h"
-
 #include "Mapping.h"
 
 using namespace juce;
@@ -7,55 +6,51 @@ using namespace juce;
 class GridComboBox final : public ComboBox
 {
 public:
-    GridComboBox(const String& componentName, int row)
-        : ComboBox(componentName),
-          row(row)
-    {
-    }
+    GridComboBox(const String& componentName, const int row)
+    : ComboBox(componentName)
+    , Row(row)
+    {}
 
-    int row;
+    int Row;
 };
 
 class GridToggleButton final : public ToggleButton
 {
 public:
-    GridToggleButton(const String& componentName, int row)
-        : ToggleButton(componentName),
-          row(row)
-    {
-    }
+    GridToggleButton(const String& componentName, const int row)
+    : ToggleButton(componentName)
+    , Row(row)
+    {}
 
-    int row;
+    int Row;
 };
 
 class GridTextButton final : public TextButton
 {
 public:
-    GridTextButton(const String& componentName, int row)
-        : TextButton(componentName),
-          row(row)
-    {
-    }
+    GridTextButton(const String& componentName, const int row)
+    : TextButton(componentName)
+    , Row(row)
+    {}
 
-    int row;
+    int Row;
 };
 
 class GridTextEditor final : public TextEditor
 {
 public:
-    GridTextEditor(const String& componentName, int row)
-        : TextEditor(componentName),
-          row(row)
-    {
-    }
+    GridTextEditor(const String& componentName, const int row)
+    : TextEditor(componentName)
+    , Row(row)
+    {}
 
-    int row;
+    int Row;
 };
 
-class PathSelectorComponent : public Component
+class PathSelectorComponent final : public Component
 {
 public:
-    PathSelectorComponent(int row): comboBox("Path", row)
+    PathSelectorComponent(const int row): comboBox("Path", row)
     {
         addAndMakeVisible(comboBox);
         addAndMakeVisible(browseButton);
@@ -73,7 +68,7 @@ public:
                 if (fc.getResult() == File{})
                     return;
 
-                auto file = fc.getResult();
+                const auto file = fc.getResult();
                 comboBox.setText(file.getFullPathName(), sendNotification);
                 // Notify about change
             });
@@ -89,22 +84,20 @@ public:
             comboBox.getRootMenu()->clear();
             
             // Populate with fresh process list
-            auto processes = WindowHelper::getProcesses();
+            const auto processes = WindowHelper::getProcesses();
             int index = 0;
             for (auto& info : processes)
             {
-                comboBox.getRootMenu()->addItem(++index, info.path, true, false, info.icon);
+                comboBox.getRootMenu()->addItem(++index, info.Path, true, false, info.Icon);
             }
         }
     }
-
-
+    
     void resized() override
     {
         auto bounds = getLocalBounds();
-        auto buttonWidth = 24;
-        
-        browseButton.setBounds(bounds.removeFromRight(buttonWidth));
+
+        browseButton.setBounds(bounds.removeFromRight(24));
         bounds.removeFromRight(2); // gap
         comboBox.setBounds(bounds);
     }
@@ -115,7 +108,7 @@ public:
 };
 
 
-void MappingListBoxModel::paintRowBackground( Graphics& g, int rowNumber, int , int , bool )
+void MappingListBoxModel::paintRowBackground( Graphics& g, const int rowNumber, int , int , bool )
 {
     g.fillAll((*_mappings)[rowNumber]->isActive() ? Colours::green : Colours::white);
 }
@@ -125,12 +118,12 @@ void MappingListBoxModel::paintCell(Graphics&, int, int, int, int, bool)
     
 }
 
-Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int columnId, bool isRowSelected,
+Component* MappingListBoxModel::refreshComponentForCell( const int rowNumber, const int columnId, const bool isRowSelected,
                                                         Component* existingComponentToUpdate)
 {
-    auto& mapping = (*_mappings)[rowNumber];
+    const auto& mapping = (*_mappings)[rowNumber];
     
-    if (columnId == static_cast<int>(Icon))
+    if (columnId == Icon)
     {
         auto* image_component = dynamic_cast<ImageComponent*> (existingComponentToUpdate);
 
@@ -142,7 +135,7 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
         
         if (image_component != nullptr)
         {
-            if (rowNumber < static_cast<int>(_mappings->size()))
+            if (std::cmp_less(rowNumber, _mappings->size()))
             {
                 image_component->setImage(mapping->exeIcon());
             }
@@ -155,7 +148,7 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
         return nullptr;
     }
 
-    if (columnId == static_cast<int>(Path))
+    if (columnId == Path)
     {
         if (mapping->isDefault())
         {
@@ -169,53 +162,51 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
 
             return label;
         }
-        else
-        {
-            auto* path_selector_component = dynamic_cast<PathSelectorComponent*> (existingComponentToUpdate);
-            if (path_selector_component == nullptr)
-            {
-                path_selector_component = new PathSelectorComponent(rowNumber);
-                path_selector_component->comboBox.addListener(this);
-            }
         
-            if (path_selector_component != nullptr)
-            {
-                path_selector_component->comboBox.setText(mapping->path(), dontSendNotification);
-                path_selector_component->comboBox.setTooltip(mapping->path());
-                path_selector_component->browseButton.setTooltip("Browse for executable");
-            
-                if (mapping->isActualPath())
-                {
-                    if (mapping->fileExists())
-                        path_selector_component->comboBox.setColour(ComboBox::textColourId, Colours::green);
-                    else
-                        path_selector_component->comboBox.setColour(ComboBox::textColourId, Colours::red);
-                }
-            }
-            return path_selector_component;
+        auto* pathSelectorComponent = dynamic_cast<PathSelectorComponent*> (existingComponentToUpdate);
+        if (pathSelectorComponent == nullptr)
+        {
+            pathSelectorComponent = new PathSelectorComponent(rowNumber);
+            pathSelectorComponent->comboBox.addListener(this);
         }
+        
+        if (pathSelectorComponent != nullptr)
+        {
+            pathSelectorComponent->comboBox.setText(mapping->path(), dontSendNotification);
+            pathSelectorComponent->comboBox.setTooltip(mapping->path());
+            pathSelectorComponent->browseButton.setTooltip("Browse for executable");
+            
+            if (mapping->isActualPath())
+            {
+                if (mapping->fileExists())
+                    pathSelectorComponent->comboBox.setColour(ComboBox::textColourId, Colours::green);
+                else
+                    pathSelectorComponent->comboBox.setColour(ComboBox::textColourId, Colours::red);
+            }
+        }
+        return pathSelectorComponent;
     }
 
     if (columnId == Profile)
     {
-        auto* combo_box = dynamic_cast<GridComboBox*> (existingComponentToUpdate);
-        if (combo_box == nullptr)
+        auto* profileComboBox = dynamic_cast<GridComboBox*> (existingComponentToUpdate);
+        if (profileComboBox == nullptr)
         {
-            combo_box = new GridComboBox("Profile", rowNumber);
-            combo_box->setTooltip("Name of Profile to switch to");
-            combo_box->addListener(this);
+            profileComboBox = new GridComboBox("Profile", rowNumber);
+            profileComboBox->setTooltip("Name of Profile to switch to");
+            profileComboBox->addListener(this);
         }
         
-        if (combo_box != nullptr)
+        if (profileComboBox != nullptr)
         {
             
-            combo_box->clear();
+            profileComboBox->clear();
 
             int selected_index = 0;
             int index = 0;
             for (auto& profile : mapping->deviceProfiles())
             {
-                combo_box->addItem(profile, ++index);
+                profileComboBox->addItem(profile, ++index);
 
                 if (profile == mapping->profileName())
                 {
@@ -223,32 +214,32 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
                 }
             }
 
-            combo_box->setSelectedId(selected_index, dontSendNotification);
+            profileComboBox->setSelectedId(selected_index, dontSendNotification);
         }
 
-        return combo_box;
+        return profileComboBox;
     }
 
     if (columnId == Device)
     {
-        auto* combo_box = dynamic_cast<GridComboBox*> (existingComponentToUpdate);
-        if (combo_box == nullptr)
+        auto* deviceComboBox = dynamic_cast<GridComboBox*> (existingComponentToUpdate);
+        if (deviceComboBox == nullptr)
         {
-            combo_box = new GridComboBox("Device", rowNumber);
-            combo_box->setTooltip("Device to switch");
-            combo_box->addListener(this);
+            deviceComboBox = new GridComboBox("Device", rowNumber);
+            deviceComboBox->setTooltip("Device to switch");
+            deviceComboBox->addListener(this);
         }
         
-        if (combo_box != nullptr)
+        if (deviceComboBox != nullptr)
         {
-            combo_box->clear();
+            deviceComboBox->clear();
 
             int selected_index = 0;
             int index = 0;
             
             for (auto& device_id : mapping->deviceIds())
             {
-                combo_box->addItem(device_id.DisplayName, ++index);
+                deviceComboBox->addItem(device_id.DisplayName, ++index);
 
                 if (device_id.DeviceId == mapping->deviceId())
                 {
@@ -256,44 +247,44 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
                 }
             }
 
-            combo_box->setSelectedId(selected_index, dontSendNotification);
+            deviceComboBox->setSelectedId(selected_index, dontSendNotification);
         }
 
-        return combo_box;
+        return deviceComboBox;
     }
 
     if (columnId == Active)
     {
-        auto* toggle_button = dynamic_cast<GridToggleButton*> (existingComponentToUpdate);
-        if (toggle_button == nullptr)
+        auto* toggleButton = dynamic_cast<GridToggleButton*> (existingComponentToUpdate);
+        if (toggleButton == nullptr)
         {
-            toggle_button = new GridToggleButton("", rowNumber);
-            toggle_button->setColour(ToggleButton::tickColourId, Colours::black);
-            toggle_button->setColour(ToggleButton::tickDisabledColourId, Colours::black);
-            toggle_button->setTooltip("Activate or deactivate this mapping");
-            toggle_button->addListener(this);
+            toggleButton = new GridToggleButton("", rowNumber);
+            toggleButton->setColour(ToggleButton::tickColourId, Colours::black);
+            toggleButton->setColour(ToggleButton::tickDisabledColourId, Colours::black);
+            toggleButton->setTooltip("Activate or deactivate this mapping");
+            toggleButton->addListener(this);
         }
         
-        if (toggle_button != nullptr)
+        if (toggleButton != nullptr)
         {
-            toggle_button->setToggleState(mapping->isActive(), dontSendNotification);
+            toggleButton->setToggleState(mapping->isActive(), dontSendNotification);
         }
 
-        return toggle_button;
+        return toggleButton;
     }
 
     if (columnId == Delete)
     {
-        auto* grid_text_button = dynamic_cast<GridTextButton*> (existingComponentToUpdate);
-        if (grid_text_button == nullptr)
+        auto* gridTextButton = dynamic_cast<GridTextButton*> (existingComponentToUpdate);
+        if (gridTextButton == nullptr)
         {
-            grid_text_button = new GridTextButton("DELETE", rowNumber);
-            grid_text_button->setTooltip("Delete this mapping");
-            grid_text_button->setColour(TextButton::buttonColourId, Colours::red);
-            grid_text_button->addListener(this);
+            gridTextButton = new GridTextButton("DELETE", rowNumber);
+            gridTextButton->setTooltip("Delete this mapping");
+            gridTextButton->setColour(TextButton::buttonColourId, Colours::red);
+            gridTextButton->addListener(this);
         }
 
-        return grid_text_button;
+        return gridTextButton;
     }
     
     return TableListBoxModel::refreshComponentForCell(rowNumber, columnId, isRowSelected, existingComponentToUpdate);
@@ -301,30 +292,30 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
 
 void MappingListBoxModel::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
-    auto grid_combo_box = dynamic_cast<GridComboBox*>(comboBoxThatHasChanged);
+    const auto gridComboBox = dynamic_cast<GridComboBox*>(comboBoxThatHasChanged);
     
-    if (grid_combo_box && grid_combo_box->getName() == "Profile")
+    if (gridComboBox && gridComboBox->getName() == "Profile")
     {
         // auto row = ???
-        auto& mapping = (*_mappings)[grid_combo_box->row];
-        mapping->profileName(grid_combo_box->getText());
+        const auto& mapping = (*_mappings)[gridComboBox->Row];
+        mapping->profileName(gridComboBox->getText());
     }
 
-    if (grid_combo_box && grid_combo_box->getName() == "Path")
+    if (gridComboBox && gridComboBox->getName() == "Path")
     {
-        auto& mapping = (*_mappings)[grid_combo_box->row];
-        mapping->path(grid_combo_box->getText());
-        owner.updateContent();
+        const auto& mapping = (*_mappings)[gridComboBox->Row];
+        mapping->path(gridComboBox->getText());
+        owner->updateContent();
     }
 
-    if (grid_combo_box && grid_combo_box->getName() == "Device")
+    if (gridComboBox && gridComboBox->getName() == "Device")
     {
-        auto& mapping = (*_mappings)[grid_combo_box->row];
-        for (auto& device_id : mapping->deviceIds())
+        const auto& mapping = (*_mappings)[gridComboBox->Row];
+        for (auto& [DisplayName, DeviceId] : mapping->deviceIds())
         {
-            if (device_id.DisplayName == grid_combo_box->getText())
+            if (DisplayName == gridComboBox->getText())
             {
-                mapping->deviceId(device_id.DeviceId);
+                mapping->deviceId(DeviceId);
             }
         }
     }
@@ -332,16 +323,16 @@ void MappingListBoxModel::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 
 void MappingListBoxModel::buttonClicked(Button* sender)
 {
-    if (auto grid_toggle_button = dynamic_cast<GridToggleButton*>(sender))
+    if (const auto gridToggleButton = dynamic_cast<GridToggleButton*>(sender))
     {
-        (*_mappings)[grid_toggle_button->row]->isActive(grid_toggle_button->getToggleState());
-        owner.repaintRow(grid_toggle_button->row);
+        (*_mappings)[gridToggleButton->Row]->isActive(gridToggleButton->getToggleState());
+        owner->repaintRow(gridToggleButton->Row);
         return;
     }
 
-    if (auto grid_text_button = dynamic_cast<GridTextButton*>(sender))
+    if (const auto gridTextButton = dynamic_cast<GridTextButton*>(sender))
     {
-        ModifierKeys modifiers = ModifierKeys::getCurrentModifiers();
+        const ModifierKeys modifiers = ModifierKeys::getCurrentModifiers();
 
         if (! modifiers.isCtrlDown())
         {
@@ -349,22 +340,22 @@ void MappingListBoxModel::buttonClicked(Button* sender)
                 return;       
         }
         
-        _mappings->erase(_mappings->begin() + grid_text_button->row);
-        owner.updateContent();
+        _mappings->erase(_mappings->begin() + gridTextButton->Row);
+        owner->updateContent();
         return;
     }
 }
 
 void MappingListBoxModel::textEditorTextChanged(TextEditor& text_editor)
 {
-    if (GridTextEditor* grid_text_editor = dynamic_cast<GridTextEditor*>(&text_editor))
+    if (const GridTextEditor* grid_text_editor = dynamic_cast<GridTextEditor*>(&text_editor))
     {
-        auto& mapping = (*_mappings)[grid_text_editor->row];
+        const auto& mapping = (*_mappings)[grid_text_editor->Row];
         mapping->path(grid_text_editor->getText());
     }
 }
 
 void MappingListBoxModel::changeListenerCallback(ChangeBroadcaster* /*source*/)
 {
-    owner.updateContent();
+    owner->updateContent();
 }

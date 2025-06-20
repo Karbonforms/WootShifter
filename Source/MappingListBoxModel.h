@@ -20,8 +20,8 @@ public:
         Delete,
     };
 
-    explicit MappingListBoxModel(juce::TableListBox& owner)
-        : owner(owner)
+    explicit MappingListBoxModel(juce::TableListBox* owner)
+    : owner(owner)
     {
     }
 
@@ -46,7 +46,7 @@ public:
 
 private:
     Mappings* _mappings = nullptr;
-    juce::TableListBox& owner;
+    juce::TableListBox* owner;
 
 public:
     int getNumRows() override
