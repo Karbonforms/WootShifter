@@ -1,9 +1,11 @@
 #include "MainComponent.h"
+
+#include "Settings.h"
 using namespace juce;
 
 void MainComponent::timerCallback()
 {
-    const bool isThreadRunning = _controller.isThreadRunning();
+    const bool isThreadRunning = Controller::getInstance()->isThreadRunning();
 
     if (isThreadRunning && _stopping)
     {
@@ -12,15 +14,15 @@ void MainComponent::timerCallback()
 
     if (isThreadRunning)
     {
-        _startStopButton.setButtonText("Stop");
-        _startStopButton.setColour(TextButton::buttonColourId, Colours::red);       
+        _startStopButton.setButtonText("Stop Profile Switching");
+        _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
         return;
     }
-    
+
     if (!isThreadRunning && _stopping)
     {
         _stopping = false;
-        _startStopButton.setButtonText("Start");
+        _startStopButton.setButtonText("Start Profile Switching");
         _startStopButton.setColour(TextButton::buttonColourId, Colours::green);
         stopTimer();
         log("Thread Stopped.\n");
@@ -32,24 +34,24 @@ void MainComponent::buttonClicked(Button* button)
 {
     if (button == &_newMappingButton)
     {
-        _controller.addMapping();
+        Controller::getInstance()->addMapping();
         _listBox.updateContent();
         return;
     }
 
     if (button == &_startStopButton)
     {
-        if (_controller.isThreadRunning())
+        const auto controller = Controller::getInstance();
+        if (controller->isThreadRunning())
         {
-            
             _stopping = true;
             _startStopButton.setButtonText("Stopping...");
-            _controller.stop();
+            Controller::getInstance()->stop();
             startTimer(400);
         }
         else
         {
-            _controller.start();
+            controller->start();
             _startStopButton.setButtonText("Stop");
             _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
             log("Thread Started.\n");
@@ -57,14 +59,23 @@ void MainComponent::buttonClicked(Button* button)
     }
 }
 
-MainComponent::MainComponent(Controller& controller)
-: _mappingListBoxModel(_listBox), _controller(controller)
+void MainComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
+{
+    const auto selectedItemIndex = comboBoxThatHasChanged->getSelectedItemIndex();
+    Settings::getInstance()->saveWindowBehavior(static_cast<Settings::WindowBehavior>(selectedItemIndex));
+    // WindowBehavior = selectedItemIndex;
+}
+
+MainComponent::MainComponent()
+    : _mappingListBoxModel(_listBox)
 {
     setSize(600, 400);
 
     addAndMakeVisible(_newMappingButton);
     _newMappingButton.setButtonText("New");
     _newMappingButton.addListener(this);
+    _newMappingButton.setTooltip("Add a new Mapping");
+    _newMappingButton.setColour(TextButton::buttonColourId, Colours::green);
 
     addAndMakeVisible(&_listBox);
     // _listBox.getHeader().setStretchToFitActive(true);
@@ -85,27 +96,38 @@ MainComponent::MainComponent(Controller& controller)
     _log.setScrollbarsShown(true);
     addAndMakeVisible(&_log);
 
+    const auto controller = Controller::getInstance();
 
-    const bool isThreadRunning = controller.isThreadRunning();
+    const bool isThreadRunning = controller->isThreadRunning();
 
     if (isThreadRunning)
     {
-        _startStopButton.setButtonText("Stop");
+        _startStopButton.setButtonText("Stop Profile Switching");
         _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
     }
     else
     {
-        _startStopButton.setButtonText("Start");
-        _startStopButton.setColour(TextButton::buttonColourId, Colours::green);       
+        _startStopButton.setButtonText("Start Profile Switching");
+        _startStopButton.setColour(TextButton::buttonColourId, Colours::green);
     }
-    
-    _startStopButton.setButtonText(isThreadRunning ? "Stop" : "Start");
+
     _startStopButton.addListener(this);
+    _startStopButton.setTooltip("Start/Stop the automatic Profile Switching");
     addAndMakeVisible(&_startStopButton);
 
-    _mappingListBoxModel.setMappings(controller.GetMappings());
-    controller.setLogout(&_log);
+    _mappingListBoxModel.setMappings(controller->getMappings());
+    controller->setLogout(&_log);
 
+    _windowBehavior.addItem("[x] Closes to SysTray", 1);
+    _windowBehavior.addItem("[_] Minimises to SysTray", 2);
+    _windowBehavior.addItem("Closes and Minimises normally", 3);
+    _windowBehavior.setSelectedItemIndex(static_cast<int>(Settings::getInstance()->getWindowBehavior())
+    );
+    _windowBehavior.addListener(this);
+    addAndMakeVisible(_windowBehavior);
+
+    _tooltip.setMillisecondsBeforeTipAppears(700);
+    addChildComponent(_tooltip);
     // startTimer(400);
 }
 
@@ -117,9 +139,11 @@ MainComponent::~MainComponent()
 void MainComponent::resized()
 {
     auto bounds = getLocalBounds();
-    
+
     _log.setBounds(bounds.removeFromBottom(80));
-    _newMappingButton.setBounds(bounds.removeFromBottom(30));
-    _startStopButton.setBounds(bounds.removeFromBottom(30));
+    _newMappingButton.setBounds(bounds.removeFromTop(30).withSize(100, 30));
+    _windowBehavior.setBounds(bounds.removeFromBottom(30));
+    _startStopButton.setBounds(bounds.removeFromBottom(30).withSizeKeepingCentre(100, 30));
+
     _listBox.setBounds(bounds);
 }

@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClCompile Include="Source\MainWindow.cpp"/>
     <ClCompile Include="Source\MappingTable.cpp"/>
+    <ClCompile Include="Source\Settings.cpp" />
     <ClCompile Include="Source\WindowHelper.cpp"/>
     <ClCompile Include="Source\Controller.cpp"/>
     <ClCompile Include="Source\WootingDB.cpp"/>
@@ -1894,6 +1895,7 @@
     <ClInclude Include="Source\Controller.h"/>
     <ClInclude Include="Source\Main.h"/>
     <ClInclude Include="Source\MappingListBoxModel.h"/>
+    <ClInclude Include="Source\Settings.h" />
     <ClInclude Include="Source\WootingDB.h"/>
     <ClInclude Include="Source\Device.h"/>
     <ClInclude Include="Source\Mapping.h"/>

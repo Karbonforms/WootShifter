@@ -3,38 +3,37 @@
 #include "Main.h"
 
 class Controller final : public juce::Thread
+                       , public juce::ActionBroadcaster
 {
-private:
-    // ProfilesByDevice profilesByDevice;
-    Mappings mappings;
-    juce::String  currentDeviceID;
-    int interval = 1000;
-    juce::TextEditor* logout = nullptr;
 public:
-    static void assignProfilesToDevices(const ProfilesByDevice& profilesByDevice);
     Controller();
-
+    ~Controller() override;
+    
     void setLogout(juce::TextEditor* editor);
 
     void saveMappings() const;
     // uint8_t find_profile_index(String profile_name);
 
     void log(juce::String const& msg) const;
-
-    ~Controller() override
-    {
-        stopThread(interval);
-        saveMappings();
-    }
-
-    Mappings* GetMappings() { return &mappings; }
-
+    
+    Mappings* getMappings() { return &_mappings; }
+    
     void run() override;
     void addMapping(bool create_default_mapping = false);
     
-    void stop() { stopThread(interval); }
-    void start() { startThread(Priority::low); }
+    void stop();
+    void start();
 
-    JUCE_DECLARE_NON_COPYABLE(Controller)
+    static void assignProfilesToDevices(const ProfilesByDevice& profilesByDevice);
+    
+    JUCE_DECLARE_SINGLETON(Controller, true)
+private:
+    // ProfilesByDevice profilesByDevice;
+    Mappings            _mappings;
+    juce::String        _currentDeviceId;
+    int                 _interval = 1000;
+    juce::TextEditor*   _logout = nullptr;
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Controller)
     JUCE_DECLARE_NON_MOVEABLE(Controller)
 };

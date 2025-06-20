@@ -89,7 +89,7 @@ public:
             comboBox.getRootMenu()->clear();
             
             // Populate with fresh process list
-            auto processes = WindowHelper::GetProcesses();
+            auto processes = WindowHelper::getProcesses();
             int index = 0;
             for (auto& info : processes)
             {
@@ -130,13 +130,14 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
 {
     auto& mapping = (*_mappings)[rowNumber];
     
-    if (columnId == static_cast<int>(ColumnIds::Icon))
+    if (columnId == static_cast<int>(Icon))
     {
         auto* image_component = dynamic_cast<ImageComponent*> (existingComponentToUpdate);
 
         if (image_component == nullptr)
         {
             image_component = new ImageComponent();
+            image_component->setTooltip("Icon for mapped App");
         }
         
         if (image_component != nullptr)
@@ -154,7 +155,7 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
         return nullptr;
     }
 
-    if (columnId == static_cast<int>(ColumnIds::Path))
+    if (columnId == static_cast<int>(Path))
     {
         if (mapping->isDefault())
         {
@@ -163,6 +164,7 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
             {
                 label = new Label("",mapping->path());
                 label->setColour(Label::textColourId, Colours::lightblue);
+                label->setTooltip("DEFAULT is used if no other App matches");
             }
 
             return label;
@@ -179,6 +181,8 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
             if (path_selector_component != nullptr)
             {
                 path_selector_component->comboBox.setText(mapping->path(), dontSendNotification);
+                path_selector_component->comboBox.setTooltip(mapping->path());
+                path_selector_component->browseButton.setTooltip("Browse for executable");
             
                 if (mapping->isActualPath())
                 {
@@ -192,17 +196,19 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
         }
     }
 
-    if (columnId == static_cast<int>(ColumnIds::Profile))
+    if (columnId == Profile)
     {
         auto* combo_box = dynamic_cast<GridComboBox*> (existingComponentToUpdate);
         if (combo_box == nullptr)
         {
             combo_box = new GridComboBox("Profile", rowNumber);
+            combo_box->setTooltip("Name of Profile to switch to");
             combo_box->addListener(this);
         }
         
         if (combo_box != nullptr)
         {
+            
             combo_box->clear();
 
             int selected_index = 0;
@@ -223,12 +229,13 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
         return combo_box;
     }
 
-    if (columnId == static_cast<int>(ColumnIds::Device))
+    if (columnId == Device)
     {
         auto* combo_box = dynamic_cast<GridComboBox*> (existingComponentToUpdate);
         if (combo_box == nullptr)
         {
             combo_box = new GridComboBox("Device", rowNumber);
+            combo_box->setTooltip("Device to switch");
             combo_box->addListener(this);
         }
         
@@ -255,7 +262,7 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
         return combo_box;
     }
 
-    if (columnId == static_cast<int>(ColumnIds::Active))
+    if (columnId == Active)
     {
         auto* toggle_button = dynamic_cast<GridToggleButton*> (existingComponentToUpdate);
         if (toggle_button == nullptr)
@@ -263,6 +270,7 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
             toggle_button = new GridToggleButton("", rowNumber);
             toggle_button->setColour(ToggleButton::tickColourId, Colours::black);
             toggle_button->setColour(ToggleButton::tickDisabledColourId, Colours::black);
+            toggle_button->setTooltip("Activate or deactivate this mapping");
             toggle_button->addListener(this);
         }
         
@@ -274,12 +282,13 @@ Component* MappingListBoxModel::refreshComponentForCell(int rowNumber, int colum
         return toggle_button;
     }
 
-    if (columnId == static_cast<int>(ColumnIds::Delete))
+    if (columnId == Delete)
     {
         auto* grid_text_button = dynamic_cast<GridTextButton*> (existingComponentToUpdate);
         if (grid_text_button == nullptr)
         {
             grid_text_button = new GridTextButton("DELETE", rowNumber);
+            grid_text_button->setTooltip("Delete this mapping");
             grid_text_button->setColour(TextButton::buttonColourId, Colours::red);
             grid_text_button->addListener(this);
         }
@@ -332,6 +341,14 @@ void MappingListBoxModel::buttonClicked(Button* sender)
 
     if (auto grid_text_button = dynamic_cast<GridTextButton*>(sender))
     {
+        ModifierKeys modifiers = ModifierKeys::getCurrentModifiers();
+
+        if (! modifiers.isCtrlDown())
+        {
+            if ( ! AlertWindow::showOkCancelBox(MessageBoxIconType::WarningIcon, "Delete Mapping?", "Do you really want to delete this mapping?"))
+                return;       
+        }
+        
         _mappings->erase(_mappings->begin() + grid_text_button->row);
         owner.updateContent();
         return;
@@ -347,7 +364,7 @@ void MappingListBoxModel::textEditorTextChanged(TextEditor& text_editor)
     }
 }
 
-void MappingListBoxModel::changeListenerCallback(juce::ChangeBroadcaster* /*source*/)
+void MappingListBoxModel::changeListenerCallback(ChangeBroadcaster* /*source*/)
 {
     owner.updateContent();
 }

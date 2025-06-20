@@ -5,16 +5,19 @@
 
 #define JSON_NOEXCEPTION 1
 #include "json.hpp"
+#include "Settings.h"
 
 using namespace juce;
 using namespace nlohmann;
 
+JUCE_IMPLEMENT_SINGLETON(Controller);
+
 Controller::Controller()
-: Thread("Controller")
+    : Thread("Controller")
 {
     Mapping::devices(WootingControl::RetrieveConnectedDevices());
 
-    currentDeviceID = Mapping::devices().back().DeviceId();
+    _currentDeviceId = Mapping::devices().back().DeviceId();
 
     for (auto& device : Mapping::devices())
     {
@@ -27,22 +30,24 @@ Controller::Controller()
 
     assignProfilesToDevices(profilesByDevice);
 
-    const auto appdir = File::getSpecialLocation(File::windowsLocalAppData).getChildFile(JUCEApplication::getInstance()->getApplicationName());
+    const auto appdir = Settings::getApplicationDataDirectory();
 
-    const auto mappings_file = appdir.getChildFile("mappings.json");
-    if (mappings_file.existsAsFile())
+    const auto mappingsFile = appdir.getChildFile("mappings.json");
+    
+    if (mappingsFile.existsAsFile())
     {
-        auto jsonString = mappings_file.loadFileAsString().toStdString();
+        auto jsonString = mappingsFile.loadFileAsString().toStdString();
 
-        if (! json::accept(jsonString))
+        if (!json::accept(jsonString))
         {
             Logger::outputDebugString("Invalid JSON");
             AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Invalid JSON", "Invalid JSON in mappings.json");
             JUCEApplication::quit();
-            return;       
+            return;
         }
-        json jmappings = json::parse(jsonString);
         
+        json jmappings = json::parse(jsonString);
+
         for (const auto& mapping : jmappings)
         {
             auto m = std::make_unique<Mapping>();
@@ -52,15 +57,22 @@ Controller::Controller()
             m->profileName(std::string(mapping["Profile"]));
             m->isActive(mapping["IsActive"]);
 
-            mappings.emplace_back(std::move(m));
+            _mappings.emplace_back(std::move(m));
         }
 
-        if (mappings.empty())
+        if (_mappings.empty())
             addMapping(true);
 
-        std::ranges::sort(mappings, [](const auto& a, const auto& b) { return a->deviceId() < b->deviceId(); }); 
+        std::ranges::sort(_mappings, [](const auto& a, const auto& b)
+        {
+            if (a->isDefault() != b->isDefault())
+            {
+                return a->isDefault(); // true values will come first
+            }
+            return false; // don't change relative order of other items
+        });
 
-        for (const auto& mapping : mappings)
+        for (const auto& mapping : _mappings)
         {
             mapping->initialize();
         }
@@ -71,10 +83,10 @@ void Controller::assignProfilesToDevices(const ProfilesByDevice& profilesByDevic
 {
     if (!Mapping::devices().empty())
     {
-        for ( Device& device : Mapping::devices() )
+        for (Device& device : Mapping::devices())
         {
             auto deviceId = device.DeviceId();
-            
+
             auto it = profilesByDevice.find(device.DeviceId());
             if (it != profilesByDevice.end())
             {
@@ -86,9 +98,9 @@ void Controller::assignProfilesToDevices(const ProfilesByDevice& profilesByDevic
 
 void Controller::setLogout(TextEditor* editor)
 {
-    this->logout = editor;
+    this->_logout = editor;
 
-    if (logout)
+    if (_logout)
     {
         String data;
 
@@ -118,23 +130,24 @@ void Controller::setLogout(TextEditor* editor)
 
 void Controller::saveMappings() const
 {
-    if (mappings.empty())
+    if (_mappings.empty())
         return;
-    
+
     json jmappings = json::array();
 
-    for (const auto& mapping : mappings)
+    for (const auto& mapping : _mappings)
     {
         json j;
         j["DeviceId"] = mapping->deviceId().toStdString();
         j["Path"] = mapping->path().toStdString();
         j["Profile"] = mapping->profileName().toStdString();
         j["IsActive"] = mapping->isActive();
-    
+
         jmappings.push_back(j);
     }
 
-    auto appdir = File::getSpecialLocation(File::windowsLocalAppData).getChildFile(JUCEApplication::getInstance()->getApplicationName());
+    auto appdir = File::getSpecialLocation(File::windowsLocalAppData).getChildFile(
+        JUCEApplication::getInstance()->getApplicationName());
     if (appdir.exists() == false)
     {
         const auto r = appdir.createDirectory();
@@ -144,7 +157,7 @@ void Controller::saveMappings() const
             return;
         }
     }
-    
+
     auto mappings_file = appdir.getChildFile("mappings.json");
     if (mappings_file.replaceWithText(jmappings.dump(4)))
     {
@@ -154,15 +167,21 @@ void Controller::saveMappings() const
 
 void Controller::log(String const& msg) const
 {
-    if (logout)
+    if (_logout)
     {
         // auto string = logout->getText();
         // string.append(msg, msg.length());
         // logout->setText(string, false);
 
-        logout->insertTextAtCaret(msg);
-        logout->insertTextAtCaret("\n");
+        _logout->insertTextAtCaret(msg);
+        _logout->insertTextAtCaret("\n");
     }
+}
+
+Controller::~Controller()
+{
+    stopThread(_interval);
+    saveMappings();
 }
 
 void Controller::run()
@@ -170,28 +189,28 @@ void Controller::run()
     String previous_path;
     while (threadShouldExit() == false)
     {
-        if (wait(interval))
+        if (wait(_interval))
         {
             break;
         }
-    
-        auto path = WindowHelper::GetActiveWindowPath();
+
+        auto path = WindowHelper::getActiveWindowPath();
 
         if (path != previous_path)
         {
             previous_path = path;
-            
+
             auto pred = [&path](const std::unique_ptr<Mapping>& m)
             {
                 return m->path() == path && m->isActive();
             };
-        
-            auto mappingIterator = std::ranges::find_if(mappings, pred);
 
-            if (mappingIterator != mappings.end())
+            auto mappingIterator = std::ranges::find_if(_mappings, pred);
+
+            if (mappingIterator != _mappings.end())
             {
                 const auto i = mappingIterator->get()->profileIndex();
-            
+
                 if (WootingControl::set_active_profile_index(i))
                 {
                     const auto profile_name = (*mappingIterator)->profileName();
@@ -201,17 +220,17 @@ void Controller::run()
             }
             else
             {
-                for (const auto& mapping : mappings)
+                for (const auto& mapping : _mappings)
                 {
                     if (mapping->isDefault())
                     {
                         const auto i = mapping->profileIndex();
-                        if ( WootingControl::set_active_profile_index(i) )
+                        if (WootingControl::set_active_profile_index(i))
                         {
                             const MessageManagerLock lock;
                             log("Active profile: " + mapping->profileName());
                         }
-                        
+
                         break;
                     }
                 }
@@ -230,6 +249,17 @@ void Controller::addMapping(bool create_default_mapping)
     m->profileName(Mapping::devices().back().ProfileInfos.front().Name);
     m->isActive(false);
 
-    mappings.emplace_back(std::move(m));
+    _mappings.emplace_back(std::move(m));
 }
 
+void Controller::stop ()
+{
+    stopThread(_interval);
+    sendActionMessage("Stopped.");
+}
+
+void Controller::start ()
+{
+    startThread(Priority::low);
+    sendActionMessage("Running!");
+}

@@ -1,16 +1,16 @@
 #include "TrayIcon.h"
 
+#include "Controller.h"
+
 using namespace juce;
 
 TrayIcon::TrayIcon()
 {
-    // Image image = ImageFileFormat::loadFrom(File(
-    //     R"(C:\Program Files\Applied Acoustics Systems\String Studio VS-3\Bitmaps\artwork_letter_g@2x.png)"));
-    //
-    // JUCEApplication::getInstance().get
+    Controller::getInstance()->addActionListener(this);
     const auto image = ImageFileFormat::loadFrom (BinaryData::small_png, BinaryData::small_pngSize);
     setIconImage (image, image);
     setIconTooltip (JUCEApplication::getInstance()->getApplicationName());
+
     
     menu.addItem(1, "Show Window");
     menu.addItem(2, "Exit");
@@ -58,8 +58,16 @@ void TrayIcon::mouseDoubleClick(const MouseEvent&)
 //     mainWindow = main;
 // }
 
-void TrayIcon::changeListenerCallback(juce::ChangeBroadcaster*)
+void TrayIcon::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
+
     String msg = JUCEApplication::getInstance()->getApplicationName();
     showInfoBubble(msg,"Running in Notification Area!");
+}
+
+void TrayIcon::actionListenerCallback ( const juce::String& message )
+{
+    String s = JUCEApplication::getInstance()->getApplicationName();
+    s << " " << message;
+    setIconTooltip (s);
 }

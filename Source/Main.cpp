@@ -5,6 +5,7 @@
 #include <wooting-rgb-sdk.h>
 
 #include "MainWindow.h"
+#include "Settings.h"
 #include "TrayIcon.h"
 
 class WootShifterApplication final : public juce::JUCEApplication
@@ -19,8 +20,9 @@ public:
 
     void initialise (const String& /*commandLine*/) override
     {
-        controller.start();
-        mainWindow.reset (new MainWindow (getApplicationName(), controller));
+        // controller.start();
+        Controller::getInstance()->start();
+        mainWindow.reset (new MainWindow (getApplicationName()));
         
         
         tray_icon.addChangeListener(mainWindow.get());
@@ -30,7 +32,8 @@ public:
     void shutdown() override
     {
         // Add your application's shutdown code here..
-
+        Controller::deleteInstance();
+        Settings::deleteInstance();
         mainWindow = nullptr; // (deletes our window)
     }
 
@@ -49,7 +52,8 @@ public:
     }
 
 private:
-    Controller controller;
+    static juce::PropertiesFile::Options settingsOptions;
+    //Controller controller;
     std::unique_ptr<MainWindow> mainWindow;
     TrayIcon tray_icon;
 };
