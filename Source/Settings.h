@@ -14,8 +14,10 @@ public:
         Normal = 2
     };
 
+    void saveInterval(int interval) const;
+    [[nodiscard]] int getInterval() const;
+    
     void saveWindowBehavior(WindowBehavior wb) const;
-
     [[nodiscard]] WindowBehavior getWindowBehavior() const;
 
     static juce::File getApplicationDataDirectory();

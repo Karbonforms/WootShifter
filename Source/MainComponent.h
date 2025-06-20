@@ -7,9 +7,12 @@
 class MainComponent final : public juce::Component
                           , public juce::Button::Listener
                           , public juce::ComboBox::Listener
+                          // , public juce::TextEditor::Listener
                           , public juce::Timer
 {
 public:
+    // void textEditorTextChanged ( juce::TextEditor& ) override;
+
     void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
 
     explicit MainComponent();
@@ -35,6 +38,9 @@ private:
     juce::TextEditor    _log;
     juce::TooltipWindow _tooltip;
     juce::ComboBox      _windowBehavior;
+    juce::Label         _intervalLabel;
+    juce::TextEditor    _interval;
+    juce::TextButton    _intervalButton;
     
     MappingTable        _listBox;
 

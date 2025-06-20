@@ -194,7 +194,7 @@ void Controller::run()
     String previous_path;
     while (threadShouldExit() == false)
     {
-        if (wait(_interval))
+        if (wait(Settings::getInstance()->getInterval()))
         {
             break;
         }

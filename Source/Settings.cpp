@@ -42,6 +42,17 @@ Settings::~Settings()
     _properties = nullptr;
 }
 
+void Settings::saveInterval ( int interval ) const
+{
+    _properties->setValue("interval", interval);
+    _properties->saveIfNeeded();
+}
+
+int Settings::getInterval () const
+{
+    return _properties->getIntValue("interval", 1000);
+}
+
 void Settings::saveWindowBehavior(WindowBehavior wb)  const
 {
     _properties->setValue("window_behavior", static_cast<int>(wb));
