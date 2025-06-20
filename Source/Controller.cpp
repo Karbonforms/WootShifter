@@ -1,11 +1,11 @@
 ﻿#include "Controller.h"
 #include "Mapping.h"
-#include "WootingDB.h"
+#include "Settings.h"
 #include "WootingControl.h"
+#include "WootingDB.h"
 
 #define JSON_NOEXCEPTION 1
 #include "json.hpp"
-#include "Settings.h"
 
 using namespace juce;
 using namespace nlohmann;
@@ -13,7 +13,7 @@ using namespace nlohmann;
 JUCE_IMPLEMENT_SINGLETON(Controller);
 
 Controller::Controller()
-    : Thread("Controller")
+: Thread("Controller")
 {
     Mapping::devices(WootingControl::RetrieveConnectedDevices());
 
@@ -74,7 +74,7 @@ Controller::Controller()
             {
                 return a->isDefault(); // true values will come first
             }
-            return false; // don't change relative order of other items
+            return false; // don't change the relative order of other items
         });
 
         for (const auto& mapping : _mappings)

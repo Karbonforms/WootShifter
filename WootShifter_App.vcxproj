@@ -1872,6 +1872,7 @@
     <ClCompile Include="JuceLibraryCode\include_juce_gui_extra.cpp"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Lib\json.hpp" />
     <ClInclude Include="Lib\leveldb\c.h"/>
     <ClInclude Include="Lib\leveldb\cache.h"/>
     <ClInclude Include="Lib\leveldb\comparator.h"/>
@@ -1891,7 +1892,6 @@
     <ClInclude Include="Lib\wooting-usb.h"/>
     <ClInclude Include="Source\MainWindow.h"/>
     <ClInclude Include="Source\MappingTable.h"/>
-    <ClInclude Include="Source\json.hpp"/>
     <ClInclude Include="Source\Controller.h"/>
     <ClInclude Include="Source\Main.h"/>
     <ClInclude Include="Source\MappingListBoxModel.h"/>
