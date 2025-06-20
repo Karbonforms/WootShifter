@@ -4,12 +4,14 @@
 #include <windows.h>
 #include <vector>
 
-class WindowHelper {
+class WindowHelper
+{
 public:
-    struct ProcessInfo {
+    struct ProcessInfo
+    {
         ProcessInfo(juce::String path, juce::Image icon)
-            : path(std::move(path)),
-              icon(std::move(icon))
+        : path(std::move(path))
+        , icon(std::move(icon))
         {
         }
 
@@ -18,8 +20,8 @@ public:
     };
 
     static juce::String getWindowProcessExePath(HWND handle);
-    static juce::String GetActiveWindowPath();
-    static std::vector<ProcessInfo> GetProcesses();
+    static juce::String getActiveWindowPath();
+    static std::vector<ProcessInfo> getProcesses();
 
 private:
     // Helper function to find main window of a process

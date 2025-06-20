@@ -187,13 +187,25 @@ String WindowHelper::getWindowProcessExePath(const HWND handle)
     return {};
 }
 
-String WindowHelper::GetActiveWindowPath()
+String WindowHelper::getActiveWindowPath()
 {
-    const HWND handle = GetForegroundWindow();
-    return getWindowProcessExePath(handle);
+    static HWND previousHandle = nullptr;
+    static String savedPath;
+    
+    const auto handle = GetForegroundWindow();
+    
+    if (handle == nullptr)
+        return {};
+        
+    if (handle == previousHandle && previousHandle != nullptr)
+        return savedPath;
+    
+    previousHandle = handle;
+    savedPath = getWindowProcessExePath(handle);
+    return savedPath;
 }
 
-std::vector<WindowHelper::ProcessInfo> WindowHelper::GetProcesses()
+std::vector<WindowHelper::ProcessInfo> WindowHelper::getProcesses()
 {
     std::vector<ProcessInfo> result;
         
