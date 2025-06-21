@@ -158,9 +158,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Settings.cpp"/>
     <ClCompile Include="Source\MainWindow.cpp"/>
     <ClCompile Include="Source\MappingTable.cpp"/>
-    <ClCompile Include="Source\Settings.cpp" />
     <ClCompile Include="Source\WindowHelper.cpp"/>
     <ClCompile Include="Source\Controller.cpp"/>
     <ClCompile Include="Source\WootingDB.cpp"/>
@@ -1872,7 +1872,6 @@
     <ClCompile Include="JuceLibraryCode\include_juce_gui_extra.cpp"/>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Lib\json.hpp" />
     <ClInclude Include="Lib\leveldb\c.h"/>
     <ClInclude Include="Lib\leveldb\cache.h"/>
     <ClInclude Include="Lib\leveldb\comparator.h"/>
@@ -1888,14 +1887,15 @@
     <ClInclude Include="Lib\leveldb\table.h"/>
     <ClInclude Include="Lib\leveldb\table_builder.h"/>
     <ClInclude Include="Lib\leveldb\write_batch.h"/>
+    <ClInclude Include="Lib\json.hpp"/>
     <ClInclude Include="Lib\wooting-rgb-sdk.h"/>
     <ClInclude Include="Lib\wooting-usb.h"/>
+    <ClInclude Include="Source\Settings.h"/>
     <ClInclude Include="Source\MainWindow.h"/>
     <ClInclude Include="Source\MappingTable.h"/>
     <ClInclude Include="Source\Controller.h"/>
     <ClInclude Include="Source\Main.h"/>
     <ClInclude Include="Source\MappingListBoxModel.h"/>
-    <ClInclude Include="Source\Settings.h" />
     <ClInclude Include="Source\WootingDB.h"/>
     <ClInclude Include="Source\Device.h"/>
     <ClInclude Include="Source\Mapping.h"/>

@@ -47,6 +47,7 @@
         <FILE id="qeFlzF" name="wooting-rgb-sdk64.pdb" compile="0" resource="0"
               file="Lib/static/wooting-rgb-sdk64.pdb"/>
       </GROUP>
+      <FILE id="qqW2HS" name="json.hpp" compile="0" resource="0" file="Lib/json.hpp"/>
       <FILE id="okW6VG" name="wooting-rgb-sdk.h" compile="0" resource="0"
             file="Lib/wooting-rgb-sdk.h"/>
       <FILE id="bL6IKw" name="wooting-usb.h" compile="0" resource="0" file="Lib/wooting-usb.h"/>
@@ -55,12 +56,13 @@
       <FILE id="zZk4Pr" name="small.png" compile="0" resource="1" file="Resources/small.png"/>
     </GROUP>
     <GROUP id="{2CE2A1FC-E317-94D1-B605-DD1EB392FD0E}" name="Source">
+      <FILE id="SNvSF2" name="Settings.cpp" compile="1" resource="0" file="Source/Settings.cpp"/>
+      <FILE id="qbKpD7" name="Settings.h" compile="0" resource="0" file="Source/Settings.h"/>
       <FILE id="tErapT" name="MainWindow.cpp" compile="1" resource="0" file="Source/MainWindow.cpp"/>
       <FILE id="uDKgQd" name="MainWindow.h" compile="0" resource="0" file="Source/MainWindow.h"/>
       <FILE id="KD1eBl" name="MappingTable.cpp" compile="1" resource="0"
             file="Source/MappingTable.cpp"/>
       <FILE id="QRhaFu" name="MappingTable.h" compile="0" resource="0" file="Source/MappingTable.h"/>
-      <FILE id="D21HXO" name="json.hpp" compile="0" resource="0" file="Source/json.hpp"/>
       <FILE id="xH56o8" name="WindowHelper.cpp" compile="1" resource="0"
             file="Source/WindowHelper.cpp"/>
       <FILE id="rcstKr" name="Controller.cpp" compile="1" resource="0" file="Source/Controller.cpp"/>
