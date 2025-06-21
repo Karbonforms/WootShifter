@@ -1,10 +1,11 @@
 #include "WindowHelper.h"
-
 #include <psapi.h>
 #include <tlhelp32.h>
+#include "juce_gui_basics/detail/juce_WindowingHelpers.h"
 
 using namespace juce;
-#include "juce_gui_basics/detail/juce_WindowingHelpers.h"
+
+using detail::WindowingHelpers;
 
 namespace
 {
@@ -39,8 +40,8 @@ namespace
             return false;
         }
 
-        LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
-        LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+        const LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+        const LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
 
         if ((style & WS_DISABLED) || (exStyle & WS_EX_TOOLWINDOW))
         {
@@ -171,11 +172,9 @@ String WindowHelper::getActiveWindowPath()
     
     const auto handle = GetForegroundWindow();
     
-    if (handle == nullptr)
-        return {};
+    if (handle == nullptr) return {};
         
-    if (handle == previousHandle && previousHandle != nullptr)
-        return savedPath;
+    if (handle == previousHandle && previousHandle != nullptr) return savedPath;
     
     previousHandle = handle;
     savedPath = getWindowProcessExePath(handle);
@@ -185,8 +184,8 @@ String WindowHelper::getActiveWindowPath()
 std::vector<WindowHelper::ProcessInfo> WindowHelper::getProcesses()
 {
     std::vector<ProcessInfo> result;
-        
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+    const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot == INVALID_HANDLE_VALUE) return result;
 
     PROCESSENTRY32W pe32;
@@ -196,29 +195,15 @@ std::vector<WindowHelper::ProcessInfo> WindowHelper::getProcesses()
     {
         do
         {
-            HWND hwnd = findMainWindow(pe32.th32ProcessID);
+            const HWND hwnd = findMainWindow(pe32.th32ProcessID);
                 
             if (!hwnd) continue;
 
             String path = getWindowProcessExePath(hwnd);
-
-            const auto icon = detail::WindowingHelpers::createIconForFile(File(path));
-
-            if (path.isEmpty())
-            {
-                // wchar_t windowTitle[256];
-                // GetWindowTextW(hwnd, windowTitle, 256);
-                // OutputDebugStringW(L"Failed to get path for window: ");
-                // OutputDebugStringW(windowTitle);
-                // OutputDebugStringW(L"\n");
-                //
-                // // Try to get process path using pe32
-                // OutputDebugStringW(L"Process name from pe32: ");
-                // OutputDebugStringW(pe32.szExeFile);
-                // OutputDebugStringW(L"\n");
-
-                continue;
-            }
+            
+            if (path.isEmpty()) continue;
+            
+            const auto icon = WindowingHelpers::createIconForFile(File(path));
             
             result.emplace_back(path, icon);  
         }
