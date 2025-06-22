@@ -24,8 +24,6 @@ Controller::Controller ()
     for (auto& device : Mapping::devices())
     {
         DBG(device.ModelName);
-        // mainWindow->getContentComponent()
-        // log()
     }
 
     const auto profilesByDevice = WootingDB::retrieveProfileData();
@@ -37,9 +35,9 @@ Controller::Controller ()
 
     assignProfilesToDevices(profilesByDevice);
 
-    const auto appdir = Settings::getApplicationDataDirectory();
+    // const auto appdir = Settings::getApplicationDataDirectory();
 
-    const auto mappingsFile = appdir.getChildFile("mappings.json");
+    const auto mappingsFile = Settings::GetMappingsFile();
 
     if (mappingsFile.existsAsFile())
     {
@@ -53,18 +51,18 @@ Controller::Controller ()
             return;
         }
 
-        json jmappings = json::parse(jsonString);
+        json jsonMappings = json::parse(jsonString);
 
-        for (const auto& mapping : jmappings)
+        for (const auto& jsonMapping : jsonMappings)
         {
-            auto m = std::make_unique<Mapping>();
+            auto mappingPtr = std::make_unique<Mapping>();
 
-            m->deviceId(std::string(mapping["DeviceId"]));
-            m->path(std::string(mapping["Path"]));
-            m->profileName(std::string(mapping["Profile"]));
-            m->isActive(mapping["IsActive"]);
+            mappingPtr->deviceId(std::string(jsonMapping["DeviceId"]));
+            mappingPtr->path(std::string(jsonMapping["Path"]));
+            mappingPtr->profileName(std::string(jsonMapping["Profile"]));
+            mappingPtr->isActive(jsonMapping["IsActive"]);
 
-            _mappings.emplace_back(std::move(m));
+            _mappings.emplace_back(std::move(mappingPtr));
         }
     }
 
@@ -120,17 +118,7 @@ void Controller::setLogout ( TextEditor* editor )
                 data << "\t" << profile.Name << " " << profile.Uid << "\n";
             }
         }
-
-        // data << "\n\nDevice profiles:\n";
-        // for (auto const& [key, val] : profilesByDevice)
-        // {
-        //     data << key << "\n\t";
-        //     for (auto const& profile : val)
-        //     {
-        //         data << profile.Name << ' ' << profile.Uid << '\n';
-        //     }
-        //     data << '\n';
-        // }
+        
         log(data);
     }
 }
@@ -140,33 +128,22 @@ void Controller::saveMappings () const
     if (_mappings.empty())
         return;
 
-    json jmappings = json::array();
+    json jsonMappings = json::array();
 
     for (const auto& mapping : _mappings)
     {
-        json j;
-        j["DeviceId"] = mapping->deviceId().toStdString();
-        j["Path"] = mapping->path().toStdString();
-        j["Profile"] = mapping->profileName().toStdString();
-        j["IsActive"] = mapping->isActive();
+        json jsonMapping;
+        jsonMapping["DeviceId"] = mapping->deviceId().toStdString();
+        jsonMapping["Path"] = mapping->path().toStdString();
+        jsonMapping["Profile"] = mapping->profileName().toStdString();
+        jsonMapping["IsActive"] = mapping->isActive();
 
-        jmappings.push_back(j);
+        jsonMappings.push_back(jsonMapping);
     }
 
-    auto appdir = File::getSpecialLocation(File::windowsLocalAppData).getChildFile(
-         JUCEApplication::getInstance()->getApplicationName());
-    if (appdir.exists() == false)
-    {
-        const auto r = appdir.createDirectory();
-        if (r.failed())
-        {
-            DBG("Failed to create directory: " + appdir.getFullPathName());
-            return;
-        }
-    }
+    const File mappingsFile = Settings::GetMappingsFile();
 
-    auto mappings_file = appdir.getChildFile("mappings.json");
-    if (mappings_file.replaceWithText(jmappings.dump(4)))
+    if (mappingsFile.replaceWithText(jsonMappings.dump(4)))
     {
         DBG("Saved mappings");
     }
@@ -176,10 +153,6 @@ void Controller::log ( String const& msg ) const
 {
     if (_logout)
     {
-        // auto string = logout->getText();
-        // string.append(msg, msg.length());
-        // logout->setText(string, false);
-
         _logout->insertTextAtCaret(msg);
         _logout->insertTextAtCaret("\n");
     }
@@ -191,14 +164,14 @@ Controller::~Controller ()
     saveMappings();
 }
 
-void Controller::handleProfileActivation ( juce::String path )
+void Controller::handleProfileActivation ( String path )
 {
     auto pred = [&path]( const std::unique_ptr<Mapping>& m )
     {
         return m->path() == path && m->isActive();
     };
 
-    auto mappingIterator = std::ranges::find_if(_mappings, pred);
+    const auto mappingIterator = std::ranges::find_if(_mappings, pred);
 
     if (mappingIterator != _mappings.end())
     {
@@ -230,7 +203,7 @@ void Controller::handleProfileActivation ( juce::String path )
     }
 }
 
-void Controller::handleProfileActivation ( HWND hwnd )
+void Controller::handleProfileActivation ( const HWND hwnd )
 {
     static HWND previousHandle = nullptr;
     static String savedPath;

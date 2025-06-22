@@ -9,7 +9,7 @@ MainWindow::MainWindow(const String& name)
                 , Desktop::getInstance().getDefaultLookAndFeel().findColour(backgroundColourId)
                 , allButtons )
 {
-    setUsingNativeTitleBar(true);
+    setUsingNativeTitleBar(false);
 
     setContentOwned(new MainComponent(), true);
 

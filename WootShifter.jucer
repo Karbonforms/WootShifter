@@ -104,9 +104,10 @@
     <VS2022 targetFolder="." externalLibraries="wooting-rgb-sdk64.lib&#10;leveldb.lib"
             smallIcon="zZk4Pr" bigIcon="zZk4Pr" extraDefs="JUCE_MODAL_LOOPS_PERMITTED=1">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="WootShifter" libraryPath="Lib/static/debug&#10;"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="WootShifter" libraryPath="Lib/static"
-                       headerPath="&#10;"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="${TargetName}DBG${TargetExt}"
+                       libraryPath="Lib/static/debug&#10;"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="$(TargetName)$(TargetExt)"
+                       libraryPath="Lib/static" headerPath="&#10;"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="D:/JUCE/modules"/>

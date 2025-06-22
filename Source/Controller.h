@@ -3,7 +3,7 @@
 #include "WindowHelper.h"
 
 class Controller final : public juce::Thread
-                         , public juce::ActionBroadcaster
+                       , public juce::ActionBroadcaster
 {
 public:
     Controller();

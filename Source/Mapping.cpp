@@ -45,18 +45,18 @@ void Mapping::initialize()
 {
     if (_devices.empty()) return;
     
-    auto new_devices = std::vector<DeviceDisplay>();
+    auto newDevices = std::vector<DeviceDisplay>();
 
     for (auto& device : _devices)
     {
-        auto device_id = device.DeviceId();
+        auto deviceId = device.DeviceId();
 
         auto display = DeviceDisplay();
         display.DisplayName = device.ModelName;
-        display.DeviceId = device_id;
-        new_devices.push_back(display);
+        display.DeviceId = deviceId;
+        newDevices.push_back(display);
 
-        if (device_id == _deviceId)
+        if (deviceId == _deviceId)
         {
             _device = device;
             auto profiles = std::vector<String>();
@@ -68,7 +68,7 @@ void Mapping::initialize()
         }
     }
 
-    deviceIds(new_devices);
+    deviceIds(newDevices);
 }
 
 bool Mapping::isActualPath() const

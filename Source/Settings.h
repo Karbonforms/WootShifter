@@ -30,6 +30,7 @@ public:
     [[nodiscard]] DetectionMethod getMethod () const;
 
     static juce::File getApplicationDataDirectory();
+    static juce::File GetMappingsFile ();
 
     JUCE_DECLARE_SINGLETON(Settings, false)
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Settings)

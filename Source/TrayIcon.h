@@ -12,9 +12,10 @@ public:
     void mouseEnter(const juce::MouseEvent& event) override;
     void mouseDown(const juce::MouseEvent& event) override;
     void mouseDoubleClick(const juce::MouseEvent& event) override;
-    // void setMainWindow(juce::DocumentWindow* mainWindow);
+    
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
     void actionListenerCallback ( const juce::String& message ) override;
-    juce::DocumentWindow* mainWindow;
-    juce::PopupMenu menu;
+
+private:
+    juce::PopupMenu _menu;
 };

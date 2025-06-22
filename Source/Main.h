@@ -12,15 +12,9 @@
     #pragma warning(pop)
 #endif
 
-#include <map>
-#include <vector>
-
-// #include "Device.h"
-// #include "Mapping.h"
-
 class Device;
-struct ProfileInfo;
 class Mapping;
+struct ProfileInfo;
 
 using ProfilesByDevice = std::map<juce::String, std::vector<ProfileInfo>>;
 using DeviceVector = std::vector<Device>;
