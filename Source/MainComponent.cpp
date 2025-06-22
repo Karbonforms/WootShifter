@@ -24,9 +24,7 @@ MainComponent::MainComponent()
 
     const auto controller = Controller::getInstance();
 
-    const bool isThreadRunning = controller->isThreadRunning();
-
-    if (isThreadRunning)
+    if (controller->isRunning())
     {
         _startStopButton.setButtonText("Stop Profile Switching");
         _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
@@ -44,11 +42,10 @@ MainComponent::MainComponent()
     _mappingListBoxModel.setMappings(controller->getMappings());
     controller->setLogout(&_log);
 
-    _windowBehavior.addItem("[x] Closes to SysTray", 1);
-    _windowBehavior.addItem("[_] Minimises to SysTray", 2);
-    _windowBehavior.addItem("Closes and Minimises normally", 3);
-    _windowBehavior.setSelectedItemIndex(static_cast<int>(Settings::getInstance()->getWindowBehavior())
-    );
+    _windowBehavior.addItem("[x] Closes to SysTray", static_cast<int>(Settings::WindowBehavior::CloseToTray));
+    _windowBehavior.addItem("[_] Minimises to SysTray", static_cast<int>(Settings::WindowBehavior::MinimizeToTray));
+    _windowBehavior.addItem("Closes and Minimises normally", static_cast<int>(Settings::WindowBehavior::Normal));
+    _windowBehavior.setSelectedId(static_cast<int>(Settings::getInstance()->getWindowBehavior()));
     _windowBehavior.addListener(this);
     addAndMakeVisible(_windowBehavior);
 
@@ -69,6 +66,22 @@ MainComponent::MainComponent()
     _intervalButton.setButtonText("Apply");
     _intervalButton.addListener(this);
     addAndMakeVisible(_intervalButton);
+    
+    _methodCombo.addItem("Detection Method: Windows Event Hook", static_cast<int>(Settings::DetectionMethod::EventHook));
+    _methodCombo.addItem("Detection Method: Polling", static_cast<int>(Settings::DetectionMethod::Polling));
+
+    auto detectionMethod = Settings::getInstance()->getMethod();
+
+    if (detectionMethod == Settings::DetectionMethod::EventHook)
+    {
+        _interval.setVisible(false);
+        _intervalLabel.setVisible(false);
+        _intervalButton.setVisible(false);
+    }
+    
+    _methodCombo.setSelectedId(static_cast<int>(detectionMethod));
+    _methodCombo.addListener(this);
+    addAndMakeVisible(_methodCombo);
 }
 
 MainComponent::~MainComponent()
@@ -115,11 +128,11 @@ void MainComponent::buttonClicked(Button* button)
     if (button == &_startStopButton)
     {
         const auto controller = Controller::getInstance();
-        if (controller->isThreadRunning())
+        if (controller->isRunning())
         {
             _stopping = true;
             _startStopButton.setButtonText("Stopping...");
-            Controller::getInstance()->stop();
+            controller->stop();
             startTimer(400);
         }
         else
@@ -127,7 +140,6 @@ void MainComponent::buttonClicked(Button* button)
             controller->start();
             _startStopButton.setButtonText("Stop");
             _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
-            log("Thread Started.\n");
         }
         return;
     }
@@ -157,9 +169,46 @@ void MainComponent::buttonClicked(Button* button)
 
 void MainComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
 {
-    const auto selectedItemIndex = comboBoxThatHasChanged->getSelectedItemIndex();
-    Settings::getInstance()->saveWindowBehavior(static_cast<Settings::WindowBehavior>(selectedItemIndex));
-    // WindowBehavior = selectedItemIndex;
+    if (comboBoxThatHasChanged == &_windowBehavior)
+    {
+        const auto item = comboBoxThatHasChanged->getSelectedId();
+        Settings::getInstance()->saveWindowBehavior(static_cast<Settings::WindowBehavior>(item));
+        return;
+    }
+    
+    if (comboBoxThatHasChanged == &_methodCombo)
+    {
+        const auto method = static_cast<Settings::DetectionMethod>(comboBoxThatHasChanged->getSelectedId());
+
+        if (method != Settings::getInstance()->getMethod())
+        {
+            const auto controller = Controller::getInstance();
+            
+            if (method == Settings::DetectionMethod::Polling)
+            {
+                _interval.setVisible(true);
+                _intervalLabel.setVisible(true);
+                _intervalButton.setVisible(true);
+            }
+            else
+            {
+                _interval.setVisible(false);
+                _intervalLabel.setVisible(false);
+                _intervalButton.setVisible(false);
+            }
+
+            if (controller->isRunning())
+            {
+                controller->stop();
+                Settings::getInstance()->saveMethod((method));
+                controller->start();
+            }
+            else
+            {
+                Settings::getInstance()->saveMethod((method));
+            }
+        }
+    }
 }
 
 void MainComponent::resized()
@@ -173,6 +222,8 @@ void MainComponent::resized()
     _startStopButton.setBounds(removeFromTop.removeFromRight(100));
     
     _windowBehavior.setBounds(bounds.removeFromBottom(30));
+
+    _methodCombo.setBounds(bounds.removeFromBottom(30));
 
     auto intervalBounds = bounds.removeFromBottom(30);
     _intervalLabel.setBounds(intervalBounds.removeFromLeft(100));

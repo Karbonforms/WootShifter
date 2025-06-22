@@ -2,6 +2,16 @@
 
 #include "Main.h"
 
+class WootingDB
+{
+public:
+    static juce::String findWootingLevelDb();
+    static ProfilesByDevice retrieveProfileData();
+
+private:
+    static ProfilesByDevice extractProfileInfo(const juce::String& json);
+};
+
 // Define the KEY constant
 const std::vector<uint8_t> KEY = []()
 {
@@ -22,29 +32,4 @@ const std::vector<uint8_t> KEY = []()
     return key;
 }();
 
-class WootingDB
-{
-public:
-    static juce::String findWootingLevelDb()
-    {
-        const auto roaming = juce::File::getSpecialLocation(juce::File::windowsLocalAppData).getSiblingFile("roaming");
-        const auto results = roaming.findChildFiles(juce::File::TypesOfFileToFind::findDirectories, false, "wootility*", juce::File::FollowSymlinks::no);
-        for (const auto& result : results)
-        {
-            const auto levelDbDir = result.getChildFile("Local Storage/leveldb");
-            if (levelDbDir.exists())
-            {
-                auto& rval = levelDbDir.getFullPathName();
-                juce::Logger::outputDebugString("Found wootility: " + rval);
-                return rval;
-            }
-        }
-        return {};
-        //return R"(C:\Users\klf\AppData\Roaming\wootility\Local Storage\leveldb)";
-    }
 
-    static ProfilesByDevice retrieveProfileData();
-
-private:
-    static ProfilesByDevice extractProfileInfo(const juce::String& json);
-};

@@ -84,7 +84,7 @@ public:
             comboBox.getRootMenu()->clear();
             
             // Populate with fresh process list
-            const auto processes = WindowHelper::getProcesses();
+            const auto processes = WindowHelper::GetProcesses();
             int index = 0;
             for (auto& info : processes)
             {

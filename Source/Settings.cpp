@@ -11,10 +11,10 @@ File Settings::getApplicationDataDirectory()
 
     if (!appDataDir.exists())
     {
-        auto r = appDataDir.createDirectory();
+        const auto r = appDataDir.createDirectory();
         if (r.failed())
         {
-            Logger::outputDebugString("Failed to create directory: " + appDataDir.getFullPathName());
+            DBG("Failed to create directory: " + appDataDir.getFullPathName());
         }
     }
 
@@ -62,4 +62,15 @@ void Settings::saveWindowBehavior(WindowBehavior wb)  const
 Settings::WindowBehavior Settings::getWindowBehavior() const
 {
     return static_cast<WindowBehavior>(_properties->getIntValue("window_behavior", 0));
+}
+
+void Settings::saveMethod ( DetectionMethod method ) const
+{
+    _properties->setValue("method", static_cast<int>(method));
+    _properties->saveIfNeeded();   
+}
+
+Settings::DetectionMethod Settings::getMethod () const
+{
+    return static_cast<DetectionMethod>(_properties->getIntValue("method", static_cast<int>(DetectionMethod::EventHook)));
 }

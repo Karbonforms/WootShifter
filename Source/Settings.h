@@ -7,11 +7,17 @@ public:
     Settings();
     ~Settings();
 
-    enum class WindowBehavior
+    enum class WindowBehavior : uint8_t
     {
-        CloseToTray = 0,
-        MinimizeToTray = 1,
-        Normal = 2
+        CloseToTray = 1,
+        MinimizeToTray = 2,
+        Normal = 3
+    };
+    
+    enum class DetectionMethod : uint8_t
+    {
+        EventHook = 1,
+        Polling = 2
     };
 
     void saveInterval(int interval) const;
@@ -19,6 +25,9 @@ public:
     
     void saveWindowBehavior(WindowBehavior wb) const;
     [[nodiscard]] WindowBehavior getWindowBehavior() const;
+
+    void saveMethod ( DetectionMethod method ) const;
+    [[nodiscard]] DetectionMethod getMethod () const;
 
     static juce::File getApplicationDataDirectory();
 

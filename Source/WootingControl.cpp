@@ -17,7 +17,7 @@ std::vector<Device> WootingControl::RetrieveConnectedDevices()
 
     if (!wooting_rgb_kbd_connected())
     {
-        Logger::outputDebugString("No Wooting devices found");
+        DBG("No Wooting devices found");
         return devices;
     }
     

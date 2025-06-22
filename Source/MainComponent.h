@@ -41,6 +41,8 @@ private:
     juce::Label         _intervalLabel;
     juce::TextEditor    _interval;
     juce::TextButton    _intervalButton;
+    juce::Label         _methodLabel;
+    juce::ComboBox      _methodCombo;
     
     MappingTable        _listBox;
 

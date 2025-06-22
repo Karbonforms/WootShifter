@@ -4,6 +4,8 @@
 #include "WootingControl.h"
 #include "WootingDB.h"
 
+#include <windows.h>
+
 #define JSON_NOEXCEPTION 1
 #include "json.hpp"
 
@@ -21,7 +23,7 @@ Controller::Controller ()
 
     for (auto& device : Mapping::devices())
     {
-        Logger::outputDebugString(device.ModelName);
+        DBG(device.ModelName);
         // mainWindow->getContentComponent()
         // log()
     }
@@ -45,7 +47,7 @@ Controller::Controller ()
 
         if (!json::accept(jsonString))
         {
-            Logger::outputDebugString("Invalid JSON");
+            DBG("Invalid JSON");
             AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Invalid JSON", "Invalid JSON in mappings.json");
             JUCEApplication::quit();
             return;
@@ -158,7 +160,7 @@ void Controller::saveMappings () const
         const auto r = appdir.createDirectory();
         if (r.failed())
         {
-            Logger::outputDebugString("Failed to create directory: " + appdir.getFullPathName());
+            DBG("Failed to create directory: " + appdir.getFullPathName());
             return;
         }
     }
@@ -166,7 +168,7 @@ void Controller::saveMappings () const
     auto mappings_file = appdir.getChildFile("mappings.json");
     if (mappings_file.replaceWithText(jmappings.dump(4)))
     {
-        Logger::outputDebugString("Saved mappings");
+        DBG("Saved mappings");
     }
 }
 
@@ -189,9 +191,63 @@ Controller::~Controller ()
     saveMappings();
 }
 
+void Controller::handleProfileActivation ( juce::String path )
+{
+    auto pred = [&path]( const std::unique_ptr<Mapping>& m )
+    {
+        return m->path() == path && m->isActive();
+    };
+
+    auto mappingIterator = std::ranges::find_if(_mappings, pred);
+
+    if (mappingIterator != _mappings.end())
+    {
+        const auto i = mappingIterator->get()->profileIndex();
+
+        if (WootingControl::set_active_profile_index(i))
+        {
+            const auto profile_name = (*mappingIterator)->profileName();
+            const MessageManagerLock lock;
+            log("Active profile: " + profile_name);
+        }
+    }
+    else
+    {
+        for (const auto& mapping : _mappings)
+        {
+            if (mapping->isDefault())
+            {
+                const auto i = mapping->profileIndex();
+                if (WootingControl::set_active_profile_index(i))
+                {
+                    const MessageManagerLock lock;
+                    log("Active profile: " + mapping->profileName());
+                }
+
+                break;
+            }
+        }
+    }
+}
+
+void Controller::handleProfileActivation ( HWND hwnd )
+{
+    static HWND previousHandle = nullptr;
+    static String savedPath;
+    
+    if (hwnd == nullptr) return;
+
+    if (hwnd == previousHandle && previousHandle != nullptr) return;
+
+    previousHandle = hwnd;
+    savedPath = WindowHelper::GetWindowProcessExePath(hwnd);
+
+    handleProfileActivation(savedPath);
+}
+
 void Controller::run ()
 {
-    String previous_path;
+    String previousPath;
     while (threadShouldExit() == false)
     {
         if (wait(Settings::getInstance()->getInterval()))
@@ -199,47 +255,13 @@ void Controller::run ()
             break;
         }
 
-        auto path = WindowHelper::getActiveWindowPath();
+        auto path = WindowHelper::GetActiveWindowPath();
 
-        if (path != previous_path)
+        if (path != previousPath)
         {
-            previous_path = path;
+            previousPath = path;
 
-            auto pred = [&path]( const std::unique_ptr<Mapping>& m )
-            {
-                return m->path() == path && m->isActive();
-            };
-
-            auto mappingIterator = std::ranges::find_if(_mappings, pred);
-
-            if (mappingIterator != _mappings.end())
-            {
-                const auto i = mappingIterator->get()->profileIndex();
-
-                if (WootingControl::set_active_profile_index(i))
-                {
-                    const auto profile_name = (*mappingIterator)->profileName();
-                    const MessageManagerLock lock;
-                    log("Active profile: " + profile_name);
-                }
-            }
-            else
-            {
-                for (const auto& mapping : _mappings)
-                {
-                    if (mapping->isDefault())
-                    {
-                        const auto i = mapping->profileIndex();
-                        if (WootingControl::set_active_profile_index(i))
-                        {
-                            const MessageManagerLock lock;
-                            log("Active profile: " + mapping->profileName());
-                        }
-
-                        break;
-                    }
-                }
-            }
+            handleProfileActivation(path);
         }
     }
 }
@@ -260,11 +282,23 @@ void Controller::addMapping ( bool create_default_mapping )
 void Controller::stop ()
 {
     stopThread(_interval);
+    WindowHelper::UnRegisterWindowEvents();
     sendActionMessage("Stopped.");
+    log("Stopped");
 }
 
 void Controller::start ()
 {
-    startThread(Priority::low);
+    const auto method = Settings::getInstance()->getMethod();
+    if (method == Settings::DetectionMethod::Polling)
+    {
+        startThread(Priority::low);
+    }
+    else
+    {
+        WindowHelper::RegisterWindowEvents();
+    }
+    
     sendActionMessage("Running!");
+    log("Running");
 }

@@ -1,28 +1,32 @@
 ﻿#pragma once
-
 #include "Main.h"
+#include "WindowHelper.h"
 
 class Controller final : public juce::Thread
-                       , public juce::ActionBroadcaster
+                         , public juce::ActionBroadcaster
 {
 public:
     Controller();
     ~Controller() override;
     
+    void handleProfileActivation ( juce::String path );
+    void handleProfileActivation ( HWND hwnd );
+    
     void setLogout(juce::TextEditor* editor);
-
-    void saveMappings() const;
-    // uint8_t find_profile_index(String profile_name);
-
     void log(juce::String const& msg) const;
     
+    void saveMappings() const;
     Mappings* getMappings() { return &_mappings; }
-    
-    void run() override;
     void addMapping(bool create_default_mapping = false);
     
     void stop();
     void start();
+    
+    void run() override;
+    bool isRunning () const
+    {
+        return isThreadRunning() || WindowHelper::IsEventHookValid();
+    }
 
     static void assignProfilesToDevices(const ProfilesByDevice& profilesByDevice);
     

@@ -6,6 +6,24 @@
 
 using namespace juce;
 
+String WootingDB::findWootingLevelDb ()
+{
+    const auto roaming = File::getSpecialLocation(File::windowsLocalAppData).getSiblingFile("roaming");
+    const auto results = roaming.findChildFiles(File::TypesOfFileToFind::findDirectories, false, "wootility*", File::FollowSymlinks::no);
+    for (const auto& result : results)
+    {
+        const auto levelDbDir = result.getChildFile("Local Storage/leveldb");
+        if (levelDbDir.exists())
+        {
+            auto& rval = levelDbDir.getFullPathName();
+            DBG("Found wootility: " + rval);
+            return rval;
+        }
+    }
+    return {};
+    //return R"(C:\Users\klf\AppData\Roaming\wootility\Local Storage\leveldb)";
+}
+
 ProfilesByDevice WootingDB::retrieveProfileData()
 {
     // Open a connection to DB
@@ -32,7 +50,7 @@ ProfilesByDevice WootingDB::retrieveProfileData()
         msg << "Error: " << status.ToString();
         
         AlertWindow::showMessageBox(AlertWindow::WarningIcon, title, msg);
-        Logger::outputDebugString(title + msg);
+        DBG(title + msg);
         return {};
     }
     
@@ -42,15 +60,6 @@ ProfilesByDevice WootingDB::retrieveProfileData()
                      &value);
 
     value = value.substr(1, value.size() - 1);
-
-    // File file("C:/Users/klf/Desktop/dbget.txt");
-    // if (file.replaceWithText(value))
-    // {
-    //     
-    // }
-    
-    // Convert string to vector<uint8_t>
-    // std::vector<uint8_t> valueBytes(value.begin(), value.end());
 
     auto profilesByDevice = extractProfileInfo(value);
 
@@ -104,7 +113,7 @@ ProfilesByDevice WootingDB::extractProfileInfo(const String& json)
     }
     catch (const nlohmann::json::exception& ex)
     {
-        Logger::outputDebugString(ex.what());
+        DBG(ex.what());
         // std::string("Failed to parse profiles: ") + ex.what());
     }
 

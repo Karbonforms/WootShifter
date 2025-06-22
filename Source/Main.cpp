@@ -26,6 +26,7 @@ public:
     void shutdown() override
     {
         // Add your application's shutdown code here..
+        Controller::getInstance()->stop();
         Controller::deleteInstance();
         Settings::deleteInstance();
         _mainWindow = nullptr; // (deletes our window)

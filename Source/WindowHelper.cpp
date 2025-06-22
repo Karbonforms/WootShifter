@@ -1,6 +1,10 @@
 #include "WindowHelper.h"
+#include <windows.h>
 #include <psapi.h>
 #include <tlhelp32.h>
+
+
+#include "Controller.h"
 #include "juce_gui_basics/detail/juce_WindowingHelpers.h"
 
 using namespace juce;
@@ -9,25 +13,25 @@ using detail::WindowingHelpers;
 
 namespace
 {
-    struct EnumData {
-        DWORD process_id;
-        HWND window;
-    };
+    HWINEVENTHOOK _eventHook = nullptr;
     
-    bool IsAppWindow(const HWND hwnd)
+    struct EnumData
+    {
+        DWORD ProcessId;
+        HWND Window;
+    };
+
+    bool IsAppWindow ( const HWND hwnd )
     {
 #ifdef DEBUG
         wchar_t windowTitle[256];
         GetWindowTextW(hwnd, windowTitle, 256);
         auto msg = String(windowTitle);
 #endif
-    
+
         if (!IsWindowVisible(hwnd))
         {
-#ifdef DEBUG
-            msg << " Window not visible\n";
-            Logger::outputDebugString( msg );
-#endif
+            DBG( msg << " Window not visible\n" );
             return false;
         }
 
@@ -35,7 +39,7 @@ namespace
         {
 #ifdef DEBUG
             msg << " Window has owner\n";
-            Logger::outputDebugString( msg );
+            DBG( msg );
 #endif
             return false;
         }
@@ -45,23 +49,17 @@ namespace
 
         if ((style & WS_DISABLED) || (exStyle & WS_EX_TOOLWINDOW))
         {
-#ifdef DEBUG
-            msg << " Window has disabled or toolwindow style\n";
-            Logger::outputDebugString( msg );
-#endif
+            DBG( msg << " Window has disabled or toolwindow style\n" );
             return false;
         }
 
         wchar_t className[256];
-        GetClassNameW(hwnd, className, sizeof(className)/sizeof(wchar_t));
+        GetClassNameW(hwnd, className, sizeof(className) / sizeof(wchar_t));
 
         if (wcscmp(className, L"Windows.UI.Core.CoreWindow") == 0 ||
             wcscmp(className, L"ApplicationFrameWindow") == 0)
         {
-#ifdef DEBUG
-            msg << " System window class " << className << "\n";
-            Logger::outputDebugString( msg );
-#endif
+            DBG( msg << " System window class " << className << "\n" );
             return false;
         }
 
@@ -69,38 +67,56 @@ namespace
         GetWindowRect(hwnd, &rect);
         if (rect.right - rect.left <= 0 || rect.bottom - rect.top <= 0)
         {
-#ifdef DEBUG
-            msg << " Window has zero size\n";
-            Logger::outputDebugString( msg );
-#endif
+            DBG( msg << " Window has zero size\n" );
             return false;
         }
-
-#ifdef DEBUG
-        Logger::outputDebugString("Accepted window. Title: " + msg);
-#endif
-    
+        
+        DBG("Accepted window. Title: " + msg);
+        
         return true;
     }
 
-    BOOL EnumFunc (const HWND hwnd, const LPARAM lParam)
+    BOOL EnumFunc ( const HWND hwnd, const LPARAM lParam )
     {
         auto& [pid, window] = *reinterpret_cast<EnumData*>(lParam);
-    
+
         DWORD window_process_id = 0;
         GetWindowThreadProcessId(hwnd, &window_process_id);
-        
+
         if (window_process_id == pid && IsAppWindow(hwnd))
         {
             window = hwnd;
             return FALSE;
         }
-        
+
         return TRUE;
+    }
+
+    void CALLBACK WinEventProc ( [[maybe_unused]] HWINEVENTHOOK hook
+                                         , DWORD event
+                                         , HWND hwnd
+                                         , [[maybe_unused]] LONG idObject
+                                         , [[maybe_unused]] LONG idChild
+                                         , [[maybe_unused]] DWORD idEventThread
+                                         , [[maybe_unused]] DWORD dwmsEventTime )
+    {
+        if (hwnd && event == EVENT_SYSTEM_FOREGROUND)
+        {
+            Controller::getInstance()->handleProfileActivation(hwnd);
+        }
+    }
+
+    HWND findMainWindow ( DWORD processId )
+    {
+        EnumData data = {.ProcessId = processId, .Window = nullptr};
+
+        EnumWindows(EnumFunc, reinterpret_cast<LPARAM>(&data));
+
+        return data.Window;
     }
 }
 
-String WindowHelper::getWindowProcessExePath(const HWND handle)
+String WindowHelper::GetWindowProcessExePath ( HWND handle )
 {
     if (handle)
     {
@@ -108,27 +124,23 @@ String WindowHelper::getWindowProcessExePath(const HWND handle)
         GetWindowThreadProcessId(handle, &processId);
 
         HANDLE processHandle = OpenProcess(
-                            PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
-                            , FALSE
-                            , processId);
+                                           PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
+                                           , FALSE
+                                           , processId);
 
         if (!processHandle)
         {
-#ifdef DEBUG
-            Logger::outputDebugString("OpenProcess failed with error: " + String(GetLastError()));
-#endif
- 
+            DBG("OpenProcess failed with error: " + String(GetLastError()));
+
             // Try with fewer access rights
             processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
             if (!processHandle)
             {
-#ifdef DEBUG
-                Logger::outputDebugString("OpenProcess (limited) failed with error: " + String(GetLastError()));
-#endif
+                DBG("OpenProcess (limited) failed with error: " + String(GetLastError()));
                 return {};
             }
         }
-        
+
         if (processHandle)
         {
             CHAR filename[MAX_PATH];
@@ -137,26 +149,19 @@ String WindowHelper::getWindowProcessExePath(const HWND handle)
             // Try QueryFullProcessImageNameA first
             if (QueryFullProcessImageNameA(processHandle, 0, filename, &size) == 0)
             {
-#ifdef DEBUG 
-                Logger::outputDebugString("QueryFullProcessImageNameA failed with error: " + String(GetLastError()));
-#endif
-
-
+                DBG("QueryFullProcessImageNameA failed with error: " + String(GetLastError()));
+                
                 if (GetModuleFileNameEx(processHandle, nullptr, filename, MAX_PATH) <= 0)
                 {
-#ifdef DEBUG 
-                    Logger::outputDebugString("GetModuleFileNameEx failed with error: " + String(GetLastError()));
-#endif
-
+                    DBG("GetModuleFileNameEx failed with error: " + String(GetLastError()));
+                    
                     CloseHandle(processHandle);
                     return {};
                 }
             }
             CloseHandle(processHandle);
-
-#ifdef DEBUG
-            Logger::outputDebugString(filename);
-#endif
+            
+            DBG(filename);
             
             return filename;
         }
@@ -165,23 +170,52 @@ String WindowHelper::getWindowProcessExePath(const HWND handle)
     return {};
 }
 
-String WindowHelper::getActiveWindowPath()
+
+
+
+bool WindowHelper::RegisterWindowEvents ()
+{
+    _eventHook = SetWinEventHook(
+                           EVENT_SYSTEM_FOREGROUND, // Start event
+                           EVENT_SYSTEM_FOREGROUND, // End event
+                           nullptr, // No DLL injection
+                           WinEventProc, // Callback
+                           0, // All processes
+                           0, // All threads
+                           WINEVENT_OUTOFCONTEXT |
+                           WINEVENT_SKIPOWNPROCESS
+                          );
+
+    return _eventHook != nullptr;
+}
+
+void WindowHelper::UnRegisterWindowEvents ()
+{
+    UnhookWinEvent(_eventHook);
+}
+
+bool WindowHelper::IsEventHookValid ()
+{
+    return _eventHook != nullptr;
+}
+
+String WindowHelper::GetActiveWindowPath ()
 {
     static HWND previousHandle = nullptr;
     static String savedPath;
-    
+
     const auto handle = GetForegroundWindow();
-    
+
     if (handle == nullptr) return {};
-        
+
     if (handle == previousHandle && previousHandle != nullptr) return savedPath;
-    
+
     previousHandle = handle;
-    savedPath = getWindowProcessExePath(handle);
+    savedPath = GetWindowProcessExePath(handle);
     return savedPath;
 }
 
-std::vector<WindowHelper::ProcessInfo> WindowHelper::getProcesses()
+std::vector<WindowHelper::ProcessInfo> WindowHelper::GetProcesses ()
 {
     std::vector<ProcessInfo> result;
 
@@ -196,16 +230,16 @@ std::vector<WindowHelper::ProcessInfo> WindowHelper::getProcesses()
         do
         {
             const HWND hwnd = findMainWindow(pe32.th32ProcessID);
-                
+
             if (!hwnd) continue;
 
-            String path = getWindowProcessExePath(hwnd);
-            
+            String path = GetWindowProcessExePath(hwnd);
+
             if (path.isEmpty()) continue;
-            
+
             const auto icon = WindowingHelpers::createIconForFile(File(path));
-            
-            result.emplace_back(path, icon);  
+
+            result.emplace_back(path, icon);
         }
         while (Process32NextW(snapshot, &pe32));
     }
@@ -213,15 +247,6 @@ std::vector<WindowHelper::ProcessInfo> WindowHelper::getProcesses()
     CloseHandle(snapshot);
 
     return result;
-}
-
-HWND WindowHelper::findMainWindow(DWORD process_id)
-{
-    EnumData data = {.process_id = process_id, .window = nullptr};
-
-    EnumWindows( EnumFunc, reinterpret_cast<LPARAM>(&data));
-
-    return data.window;
 }
 
 
