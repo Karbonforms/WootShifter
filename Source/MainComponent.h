@@ -47,7 +47,9 @@ private:
     MappingTable        _listBox;
 
     bool _stopping = false;
-    
+    const char* stopText = "Stop Profile Switching";
+    const char* startText = "Start Profile Switching";
+
     JUCE_DECLARE_NON_MOVEABLE(MainComponent)
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

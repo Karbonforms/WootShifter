@@ -192,6 +192,7 @@ bool WindowHelper::RegisterWindowEvents ()
 void WindowHelper::UnRegisterWindowEvents ()
 {
     UnhookWinEvent(_eventHook);
+    _eventHook = nullptr;   
 }
 
 bool WindowHelper::IsEventHookValid ()

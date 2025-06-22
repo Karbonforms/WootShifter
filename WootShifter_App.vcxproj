@@ -1903,6 +1903,7 @@
     <ClInclude Include="Source\Controller.h" />
     <ClInclude Include="Source\Main.h" />
     <ClInclude Include="Source\MappingListBoxModel.h" />
+    <ClInclude Include="Source\version.h" />
     <ClInclude Include="Source\WootingDB.h" />
     <ClInclude Include="Source\Device.h" />
     <ClInclude Include="Source\Mapping.h" />
@@ -2739,7 +2740,6 @@
     <ClInclude Include="e:\juce\modules\juce_gui_extra\juce_gui_extra.h" />
     <ClInclude Include="JuceLibraryCode\BinaryData.h" />
     <ClInclude Include="JuceLibraryCode\JuceHeader.h" />
-    <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Lib\dynamic\wooting-rgb-sdk64.dll" />

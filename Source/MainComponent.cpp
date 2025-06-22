@@ -26,12 +26,12 @@ MainComponent::MainComponent()
 
     if (controller->isRunning())
     {
-        _startStopButton.setButtonText("Stop Profile Switching");
+        _startStopButton.setButtonText(stopText);
         _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
     }
     else
     {
-        _startStopButton.setButtonText("Start Profile Switching");
+        _startStopButton.setButtonText(startText);
         _startStopButton.setColour(TextButton::buttonColourId, Colours::green);
     }
 
@@ -92,7 +92,7 @@ MainComponent::~MainComponent()
 void MainComponent::timerCallback()
 {
     const bool isThreadRunning = Controller::getInstance()->isThreadRunning();
-
+    
     if (isThreadRunning && _stopping)
     {
         return;
@@ -100,7 +100,7 @@ void MainComponent::timerCallback()
 
     if (isThreadRunning)
     {
-        _startStopButton.setButtonText("Stop Profile Switching");
+        _startStopButton.setButtonText(stopText);
         _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
         return;
     }
@@ -108,10 +108,10 @@ void MainComponent::timerCallback()
     if (!isThreadRunning && _stopping)
     {
         _stopping = false;
-        _startStopButton.setButtonText("Start Profile Switching");
+        _startStopButton.setButtonText(startText);
         _startStopButton.setColour(TextButton::buttonColourId, Colours::green);
         stopTimer();
-        log("Thread Stopped.\n");
+        log("Polling Thread Stopped.\n");
         return;
     }
 }
@@ -130,15 +130,24 @@ void MainComponent::buttonClicked(Button* button)
         const auto controller = Controller::getInstance();
         if (controller->isRunning())
         {
-            _stopping = true;
-            _startStopButton.setButtonText("Stopping...");
             controller->stop();
-            startTimer(400);
+            if (Settings::getInstance()->getMethod() == Settings::DetectionMethod::Polling)
+            {
+                _startStopButton.setButtonText("Stopping...");
+                _stopping = true;
+                startTimer(400);
+            }
+            else
+            {
+                _startStopButton.setButtonText(startText);
+                _startStopButton.setColour(TextButton::buttonColourId, Colours::green);
+            }
+            
         }
         else
         {
             controller->start();
-            _startStopButton.setButtonText("Stop");
+            _startStopButton.setButtonText(stopText);
             _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
         }
         return;
@@ -184,19 +193,6 @@ void MainComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
         {
             const auto controller = Controller::getInstance();
             
-            if (method == Settings::DetectionMethod::Polling)
-            {
-                _interval.setVisible(true);
-                _intervalLabel.setVisible(true);
-                _intervalButton.setVisible(true);
-            }
-            else
-            {
-                _interval.setVisible(false);
-                _intervalLabel.setVisible(false);
-                _intervalButton.setVisible(false);
-            }
-
             if (controller->isRunning())
             {
                 controller->stop();
@@ -206,6 +202,21 @@ void MainComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
             else
             {
                 Settings::getInstance()->saveMethod((method));
+            }
+
+            if (method == Settings::DetectionMethod::Polling)
+            {
+                _interval.setVisible(true);
+                _intervalLabel.setVisible(true);
+                _intervalButton.setVisible(true);
+                log("Polling @" + String(Settings::getInstance()->getInterval()) + "ms\n");
+            }
+            else
+            {
+                _interval.setVisible(false);
+                _intervalLabel.setVisible(false);
+                _intervalButton.setVisible(false);
+                log("Event Hook Activated\n");           
             }
         }
     }

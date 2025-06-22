@@ -1,9 +1,10 @@
 #include "Main.h"
 #include "MainComponent.h"
-
 #include "MainWindow.h"
 #include "Settings.h"
 #include "TrayIcon.h"
+
+#include "version.h"
 
 class WootShifterApplication final : public juce::JUCEApplication
 {
@@ -12,12 +13,14 @@ public:
 
     const String getApplicationName() override       { return ProjectInfo::projectName; }
     const String getApplicationVersion() override    { return ProjectInfo::versionString; }
-    bool moreThanOneInstanceAllowed() override       { return true; }
+    bool moreThanOneInstanceAllowed() override       { return false; }
     
     void initialise (const String& /*commandLine*/) override
     {
         Controller::getInstance()->start();
-        _mainWindow.reset (new MainWindow (getApplicationName()));
+        
+        const auto windowTitle = getApplicationName() + " - " + VERSION_STRING;
+        _mainWindow.reset (new MainWindow (windowTitle));
         
         _trayIcon.addChangeListener(_mainWindow.get());
         _mainWindow->addChangeListener(&_trayIcon);
@@ -25,17 +28,14 @@ public:
 
     void shutdown() override
     {
-        // Add your application's shutdown code here..
         Controller::getInstance()->stop();
         Controller::deleteInstance();
         Settings::deleteInstance();
-        _mainWindow = nullptr; // (deletes our window)
+        _mainWindow = nullptr;
     }
 
     void systemRequestedQuit() override
     {
-        // This is called when the app is being asked to quit: you can ignore this
-        // request and let the app carry on running, or call quit() to allow the app to close.
         quit();
     }
 
@@ -47,7 +47,6 @@ public:
     }
 
 private:
-    // static juce::PropertiesFile::Options settingsOptions;
     std::unique_ptr<MainWindow> _mainWindow;
     TrayIcon _trayIcon;
 };
