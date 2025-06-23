@@ -7,6 +7,7 @@ class MappingTable final : public juce::TableListBox
 public:
     MappingTable()
     {
+        getVerticalScrollBar().setAutoHide(false);
         auto& hdr = getHeader();
         
         hdr.setStretchToFitActive(true);

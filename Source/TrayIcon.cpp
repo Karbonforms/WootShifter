@@ -55,6 +55,6 @@ void TrayIcon::changeListenerCallback ( ChangeBroadcaster* /*source*/ )
 void TrayIcon::actionListenerCallback ( const String& message )
 {
     String s = JUCEApplication::getInstance()->getApplicationName();
-    s << " " << message;
+    s << " " << message << "\n\nRight click for options.";
     setIconTooltip(s);
 }

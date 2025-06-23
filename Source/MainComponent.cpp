@@ -4,8 +4,10 @@
 using namespace juce;
 
 MainComponent::MainComponent()
-: _mappingListBoxModel(&_listBox)
+// : _mappingListBoxModel(&_listBox)
 {
+    _mappingListBoxModel = std::make_unique<MappingListBoxModel>(&_listBox);
+    
     setSize(600, 400);
 
     addAndMakeVisible(_newMappingButton);
@@ -15,7 +17,7 @@ MainComponent::MainComponent()
     _newMappingButton.setColour(TextButton::buttonColourId, Colours::green);
 
     addAndMakeVisible(&_listBox);
-    _listBox.setModel(&_mappingListBoxModel);
+    _listBox.setModel(_mappingListBoxModel.get());
 
     _log.setReadOnly(true);
     _log.setMultiLine(true);
@@ -39,7 +41,7 @@ MainComponent::MainComponent()
     _startStopButton.setTooltip("Start/Stop the automatic Profile Switching");
     addAndMakeVisible(&_startStopButton);
 
-    _mappingListBoxModel.setMappings(controller->getMappings());
+    _mappingListBoxModel->setMappings(controller->getMappings());
     controller->setLogout(&_log);
 
     _windowBehavior.addItem("[x] Closes to SysTray", static_cast<int>(Settings::WindowBehavior::CloseToTray));

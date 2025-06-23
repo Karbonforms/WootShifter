@@ -30,7 +30,7 @@ public:
     int WindowBehavior = 0;
 
 private:
-    MappingListBoxModel _mappingListBoxModel;
+    
     // Controller&         _controller;
     
     juce::TextButton    _newMappingButton;
@@ -45,7 +45,8 @@ private:
     juce::ComboBox      _methodCombo;
     
     MappingTable        _listBox;
-
+    std::unique_ptr<MappingListBoxModel> _mappingListBoxModel;
+    
     bool _stopping = false;
     const char* stopText = "Stop Profile Switching";
     const char* startText = "Start Profile Switching";
