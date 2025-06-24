@@ -1,4 +1,6 @@
 ﻿#include "MappingListBoxModel.h"
+
+#include "Controller.h"
 #include "Mapping.h"
 
 using namespace juce;
@@ -86,6 +88,9 @@ public:
             // Populate with fresh process list
             const auto processes = WindowHelper::GetProcesses();
             int index = 0;
+
+            comboBox.getRootMenu()->addItem(++index, "DEFAULT", true, false, Mapping::GetDefaultIcon());
+            
             for (auto& info : processes)
             {
                 comboBox.getRootMenu()->addItem(++index, info.Path, true, false, info.Icon);
@@ -150,18 +155,18 @@ Component* MappingListBoxModel::refreshComponentForCell( const int rowNumber, co
 
     if (columnId == Path)
     {
-        if (mapping->isDefault())
-        {
-            auto* label = dynamic_cast<Label*> (existingComponentToUpdate);
-            if (label == nullptr)
-            {
-                label = new Label("",mapping->path());
-                label->setColour(Label::textColourId, Colours::lightblue);
-                label->setTooltip("DEFAULT is used if no other App matches");
-            }
-
-            return label;
-        }
+        // if (mapping->isDefault())
+        // {
+        //     auto* label = dynamic_cast<Label*> (existingComponentToUpdate);
+        //     if (label == nullptr)
+        //     {
+        //         label = new Label("",mapping->path());
+        //         label->setColour(Label::textColourId, Colours::lightblue);
+        //         label->setTooltip("DEFAULT is used if no other App matches");
+        //     }
+        //
+        //     return label;
+        // }
         
         auto* pathSelectorComponent = dynamic_cast<PathSelectorComponent*> (existingComponentToUpdate);
         if (pathSelectorComponent == nullptr)
@@ -182,6 +187,14 @@ Component* MappingListBoxModel::refreshComponentForCell( const int rowNumber, co
                     pathSelectorComponent->comboBox.setColour(ComboBox::textColourId, Colours::green);
                 else
                     pathSelectorComponent->comboBox.setColour(ComboBox::textColourId, Colours::red);
+            }
+
+            if (mapping->isDefault())
+            {
+                pathSelectorComponent->comboBox.setColour(ComboBox::textColourId, Colours::blue);
+                pathSelectorComponent->comboBox.setColour(ComboBox::backgroundColourId, Colours::black);
+                
+                pathSelectorComponent->comboBox.setTooltip("DEFAULT is used if no other App matches");
             }
         }
         return pathSelectorComponent;
@@ -319,6 +332,8 @@ void MappingListBoxModel::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
             }
         }
     }
+
+    Controller::getInstance()->saveMappings();
 }
 
 void MappingListBoxModel::buttonClicked(Button* sender)
@@ -327,10 +342,8 @@ void MappingListBoxModel::buttonClicked(Button* sender)
     {
         (*_mappings)[gridToggleButton->Row]->isActive(gridToggleButton->getToggleState());
         owner->repaintRow(gridToggleButton->Row);
-        return;
     }
-
-    if (const auto gridTextButton = dynamic_cast<GridTextButton*>(sender))
+    else if (const auto gridTextButton = dynamic_cast<GridTextButton*>(sender))
     {
         const ModifierKeys modifiers = ModifierKeys::getCurrentModifiers();
 
@@ -341,9 +354,16 @@ void MappingListBoxModel::buttonClicked(Button* sender)
         }
         
         _mappings->erase(_mappings->begin() + gridTextButton->Row);
+
+        DBG("Deleted mapping " << gridTextButton->Row << "\n");
+        DBG("Mappings left: " << _mappings->size() << "\n");
+
+        DBG(Controller::getInstance()->debugMappings());
+
         owner->updateContent();
-        return;
     }
+
+    Controller::getInstance()->saveMappings();
 }
 
 void MappingListBoxModel::textEditorTextChanged(TextEditor& text_editor)
@@ -353,6 +373,8 @@ void MappingListBoxModel::textEditorTextChanged(TextEditor& text_editor)
         const auto& mapping = (*_mappings)[grid_text_editor->Row];
         mapping->path(grid_text_editor->getText());
     }
+
+    Controller::getInstance()->saveMappings();
 }
 
 void MappingListBoxModel::changeListenerCallback(ChangeBroadcaster* /*source*/)

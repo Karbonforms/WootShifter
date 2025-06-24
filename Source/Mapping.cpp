@@ -9,35 +9,60 @@ std::vector<Device> Mapping::_devices;
 
 Mapping::Mapping() = default;
 
+String Mapping::toString () const
+{
+    String result;
+    result << "Mapping: " << deviceName() << " : " << profileName() << " : " << path() << newLine;
+    return result;
+}
+
 void Mapping::deviceId(String const& value)
 {
-    if (_deviceId != value)
-    {
-        DBG(_deviceId + L" -> " + value);
-        _deviceId = value;
-        initialize();
-        sendChangeMessage();   
-    }
+    if (_deviceId == value) return;
+    
+    DBG(_deviceId + L" -> " + value);
+    _deviceId = value;
+    initialize();
+    
+    sendChangeMessage();
 }
 
 void Mapping::path(String const& value)
 {
-    if (_path != value)
+    if (_path == value) return;
+    
+    DBG(_path + L" -> " + value);
+
+    _path = value;
+
+    if (fileExists() && !isDefault())
     {
-        DBG(_path + L" -> " + value);
-
-        _path = value;
-
-        if (fileExists() && !isDefault())
-        {
-            _icon = WindowingHelpers::createIconForFile(_path);
-        }
-        else if (isDefault())
-        {
-            _icon = WindowingHelpers::createIconForFile(File("C:\\Windows\\explorer.exe"));
-        }
+        _icon = WindowingHelpers::createIconForFile(_path);
+    }
+    else if (isDefault())
+    {
+        _icon = GetDefaultIcon();
     }
 
+    sendChangeMessage();
+}
+
+void Mapping::profileName ( String const& value )
+{
+    if (_profileName == value) return;
+    
+    _profileName = value;
+    uint8_t idx = 0;
+    for (auto const& profile : deviceProfiles())
+    {
+        if (profile == _profileName)
+        {
+            _profileIdx = idx;
+            return;
+        }
+        idx++;
+    }
+    
     sendChangeMessage();
 }
 
@@ -94,6 +119,11 @@ void Mapping::deviceProfiles(std::vector<String> const& value)
 void Mapping::deviceIds(std::vector<DeviceDisplay> const& value)
 {
     _deviceIds = value;
+}
+
+Image Mapping::GetDefaultIcon ()
+{
+    return WindowingHelpers::createIconForFile(File("C:\\Windows\\explorer.exe"));   
 }
 
 Image Mapping::exeIcon() const

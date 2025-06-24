@@ -250,6 +250,8 @@ void Controller::addMapping ( bool create_default_mapping )
     m->isActive(true);
 
     _mappings.emplace_back(std::move(m));
+
+    DBG(debugMappings());
 }
 
 void Controller::stop ()

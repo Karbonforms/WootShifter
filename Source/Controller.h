@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Main.h"
+#include "Mapping.h"
 #include "WindowHelper.h"
 
 class Controller final : public juce::Thread
@@ -26,6 +27,17 @@ public:
     bool isRunning () const
     {
         return isThreadRunning() || WindowHelper::IsEventHookValid();
+    }
+
+    String debugMappings() const
+    {
+        String s ("Mappings: ");
+        s << _mappings.size() << juce::newLine;
+        for (auto& mapping : _mappings)
+        {
+            s << mapping->toString();
+        }
+        return s;
     }
 
     static void assignProfilesToDevices(const ProfilesByDevice& profilesByDevice);

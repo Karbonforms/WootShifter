@@ -14,28 +14,20 @@ class Mapping final : public juce::ChangeBroadcaster
 public:
     Mapping();
 
+    String toString() const;
+
     // Properties
     String deviceId() const { return _deviceId; }
     void deviceId(String const& value);
+
+    Device& device() { return _device; }
+    String deviceName() const { return _device.ModelName; }
 
     String path() const { return _path; }
     void path(String const& value);
 
     String profileName() const { return _profileName; }
-    void profileName(String const& value)
-    {
-        _profileName = value;
-        uint8_t idx = 0;
-        for (auto const& profile : deviceProfiles())
-        {
-            if (profile == _profileName)
-            {
-                _profileIdx = idx;
-                return;
-            }
-            idx++;
-        }
-    }
+    void profileName(String const& value);
 
     uint8_t profileIndex() const { return _profileIdx; }
     
@@ -58,7 +50,9 @@ public:
     // Static members
     static std::vector<Device>& devices() { return _devices; }
     static void devices(std::vector<Device> const& value) { _devices = value; }
+    static juce::Image GetDefaultIcon();
 
+    
     juce::Image exeIcon() const;
 
     void initialize();
