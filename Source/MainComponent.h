@@ -7,10 +7,12 @@
 class MainComponent final : public juce::Component
                           , public juce::Button::Listener
                           , public juce::ComboBox::Listener
-                          // , public juce::TextEditor::Listener
+                          , public juce::ActionListener
                           , public juce::Timer
 {
 public:
+    void actionListenerCallback ( const String& message ) override;
+
     // void textEditorTextChanged ( juce::TextEditor& ) override;
 
     void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
@@ -20,6 +22,7 @@ public:
     
     void timerCallback() override;
     void buttonClicked(juce::Button*) override;
+    void updateStartStopButton ( bool stopped );
     void resized() override;
 
     void log(juce::String const& msg)

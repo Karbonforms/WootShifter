@@ -12,6 +12,9 @@
 using namespace juce;
 using namespace nlohmann;
 
+String Controller::StopMsg = "stopped";
+String Controller::StartMsg = "started";
+
 JUCE_IMPLEMENT_SINGLETON(Controller);
 
 Controller::Controller ()
@@ -175,9 +178,10 @@ void Controller::handleProfileActivation ( String path )
 
     if (mappingIterator != _mappings.end())
     {
-        const auto i = mappingIterator->get()->profileIndex();
+        const auto profileIndex = mappingIterator->get()->profileIndex();
+        const auto deviceIndex = mappingIterator->get()->device().Index;
 
-        if (WootingControl::set_active_profile_index(i))
+        if (WootingControl::setActiveProfileIndex(deviceIndex, profileIndex))
         {
             const auto profile_name = (*mappingIterator)->profileName();
             const MessageManagerLock lock;
@@ -190,8 +194,10 @@ void Controller::handleProfileActivation ( String path )
         {
             if (mapping->isDefault())
             {
-                const auto i = mapping->profileIndex();
-                if (WootingControl::set_active_profile_index(i))
+                const auto profileIndex = mapping->profileIndex();
+                const auto deviceIndex = mapping->device().Index;
+                
+                if (WootingControl::setActiveProfileIndex(deviceIndex, profileIndex))
                 {
                     const MessageManagerLock lock;
                     log("Active profile: " + mapping->profileName());
@@ -258,7 +264,7 @@ void Controller::stop ()
 {
     stopThread(_interval);
     WindowHelper::UnRegisterWindowEvents();
-    sendActionMessage("Stopped.");
+    sendActionMessage(StopMsg);
     log("Stopped");
 }
 
@@ -274,6 +280,6 @@ void Controller::start ()
         WindowHelper::RegisterWindowEvents();
     }
     
-    sendActionMessage("Running!");
+    sendActionMessage(StartMsg);
     log("Running");
 }

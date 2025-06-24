@@ -45,6 +45,7 @@ public:
     uint32_t PcbDesign = 0;
     uint32_t MinorRev = 0;
     WOOTING_USB_META Info;
+    uint8_t Index;
 
     String DeviceId()
     {

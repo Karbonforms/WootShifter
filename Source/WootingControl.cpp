@@ -20,12 +20,12 @@ std::vector<Device> WootingControl::RetrieveConnectedDevices()
         DBG("No Wooting devices found");
         return devices;
     }
+
+    const uint8_t count = wooting_usb_device_count();
     
-    uint8_t count = wooting_usb_device_count();
-    
-    for (uint8_t i = 0; i < count; i++)
+    for (uint8_t index = 0; index < count; index++)
     {
-        wooting_usb_select_device(i);
+        wooting_usb_select_device(index);
         
         const WOOTING_USB_META* info = wooting_rgb_device_info();
             
@@ -49,7 +49,7 @@ std::vector<Device> WootingControl::RetrieveConnectedDevices()
             device.ParsedOK = true;
             device.Info = *info;
             device.ModelName = info->model;
-                
+            device.Index = index;
             devices.push_back(device);
         }
         else
@@ -75,26 +75,31 @@ uint8_t WootingControl::get_active_profile_index()
     return UINT8_MAX;
 }
 
-bool WootingControl::set_active_profile_index(const uint8_t idx)
+bool WootingControl::setActiveProfileIndex(const uint8_t deviceIndex, const uint8_t profileIndex)
 {
-    if (get_active_profile_index() != idx)
+    if (wooting_usb_select_device(deviceIndex))
     {
-        wooting_usb_send_feature(ACTIVATE_PROFILE, 0, 0, 0, idx);
-
-        // Thread::sleep(250);
-        //
-        wooting_usb_send_feature(RELOAD_PROFILE, 0, 0, 0, idx);
-        //
-        // Thread::sleep(250);
-        //
-        wooting_usb_send_feature(WOOT_DEV_RESET_ALL, 0, 0, 0, 0);
-        //
-        // Thread::sleep(250);
-        //
-        wooting_usb_send_feature(REFRESH_RGB_COLORS, 0, 0, 0, idx);
-
-        return true;
+        if (get_active_profile_index() != profileIndex)
+        {
+            wooting_usb_send_feature(ACTIVATE_PROFILE, 0, 0, 0, profileIndex);
+    
+            // Thread::sleep(250);
+            //
+            wooting_usb_send_feature(RELOAD_PROFILE, 0, 0, 0, profileIndex);
+            //
+            // Thread::sleep(250);
+            //
+            wooting_usb_send_feature(WOOT_DEV_RESET_ALL, 0, 0, 0, 0);
+            //
+            // Thread::sleep(250);
+            //
+            wooting_usb_send_feature(REFRESH_RGB_COLORS, 0, 0, 0, profileIndex);
+    
+            return true;
+        }
     }
+    
+    
 
     return false;
 }

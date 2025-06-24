@@ -19,6 +19,9 @@ public:
     void saveMappings() const;
     Mappings* getMappings() { return &_mappings; }
     void addMapping(bool create_default_mapping = false);
+
+    static String StartMsg; // "started";
+    static String StopMsg; // = "stopped";
     
     void stop();
     void start();

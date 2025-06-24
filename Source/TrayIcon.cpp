@@ -4,16 +4,16 @@
 
 using namespace juce;
 
+const char* startText = "Start";
+const char* stopText = "Stop";
+
 TrayIcon::TrayIcon ()
 {
-    Controller::getInstance()->addActionListener(this);
+    auto controller = Controller::getInstance();
+    controller->addActionListener(this);
     const auto image = ImageFileFormat::loadFrom(BinaryData::small_png, BinaryData::small_pngSize);
     setIconImage(image, image);
     setIconTooltip(JUCEApplication::getInstance()->getApplicationName());
-
-
-    _menu.addItem(1, "Show Window");
-    _menu.addItem(2, "Exit");
 }
 
 void TrayIcon::mouseEnter ( const MouseEvent& event )
@@ -25,14 +25,31 @@ void TrayIcon::mouseDown ( const MouseEvent& event )
 {
     if (event.mods.isRightButtonDown())
     {
+        const auto controller = Controller::getInstance();
+        _menu.clear();
+        _menu.addItem(1, controller->isRunning() ? stopText : startText);
+        _menu.addItem(2, "Show Window");
+        _menu.addItem(3, "Exit");
+        
         _menu.showMenuAsync(PopupMenu::Options()
-                            , [this]( const int result )
+                            , [this, controller]( const int result )
                                 {
                                     if (result == 1)
                                     {
-                                        sendChangeMessage();
+                                        if (controller->isRunning())
+                                        {
+                                            controller->stop();
+                                        }
+                                        else
+                                        {
+                                            controller->start();   
+                                        }
                                     }
                                     else if (result == 2)
+                                    {
+                                        sendChangeMessage();
+                                    }
+                                    else if (result == 3)
                                     {
                                         // Actually quit the application
                                         JUCEApplication::getInstance()->systemRequestedQuit();

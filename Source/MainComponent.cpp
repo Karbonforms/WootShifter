@@ -26,6 +26,8 @@ MainComponent::MainComponent()
 
     const auto controller = Controller::getInstance();
 
+    controller->addActionListener(this);
+
     if (controller->isRunning())
     {
         _startStopButton.setButtonText(stopText);
@@ -176,6 +178,26 @@ void MainComponent::buttonClicked(Button* button)
             _interval.setText(String(Settings::getInstance()->getInterval()), dontSendNotification);
         }
     }
+}
+
+void MainComponent::updateStartStopButton (bool stopped)
+{
+    if (stopped)
+    {
+        _startStopButton.setButtonText(startText);
+        _startStopButton.setColour(TextButton::buttonColourId, Colours::green);
+        return;   
+    }
+    else
+    {
+        _startStopButton.setButtonText(stopText);
+        _startStopButton.setColour(TextButton::buttonColourId, Colours::red);
+    }
+}
+
+void MainComponent::actionListenerCallback ( const String& message )
+{
+    updateStartStopButton(message == Controller::StopMsg);
 }
 
 void MainComponent::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)

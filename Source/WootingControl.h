@@ -19,5 +19,5 @@ class WootingControl
 public:
     static DeviceVector RetrieveConnectedDevices();
     static uint8_t get_active_profile_index();
-    static bool set_active_profile_index(uint8_t idx);
+    static bool setActiveProfileIndex( uint8_t deviceIndex, uint8_t profileIndex );
 };
