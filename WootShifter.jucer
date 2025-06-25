@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="DKCXAr" name="WootShifter" projectType="guiapp" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20"
-              headerPath="Lib">
+              headerPath="Lib" compilerFlagSchemes="">
   <MAINGROUP id="lARoWJ" name="WootShifter">
     <GROUP id="{38849911-721F-2FCD-58C8-080BFB73577D}" name="Lib">
       <GROUP id="{673CBBBC-0B15-5B11-86B8-6DA8FC3B5D04}" name="dynamic">
@@ -64,7 +64,7 @@
             file="Source/MappingTable.cpp"/>
       <FILE id="QRhaFu" name="MappingTable.h" compile="0" resource="0" file="Source/MappingTable.h"/>
       <FILE id="xH56o8" name="WindowHelper.cpp" compile="1" resource="0"
-            file="Source/WindowHelper.cpp"/>
+            file="Source/WindowHelper.cpp" compilerFlagScheme=""/>
       <FILE id="rcstKr" name="Controller.cpp" compile="1" resource="0" file="Source/Controller.cpp"/>
       <FILE id="rugKFi" name="Controller.h" compile="0" resource="0" file="Source/Controller.h"/>
       <FILE id="yJFIHG" name="WootingDB.cpp" compile="1" resource="0" file="Source/WootingDB.cpp"/>
@@ -92,12 +92,12 @@
     </GROUP>
   </MAINGROUP>
   <MODULES>
-    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
-    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
-    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
-    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
-    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
-    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
@@ -118,5 +118,19 @@
         <MODULEPATH id="juce_gui_extra" path="D:/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
+    <LINUX_MAKE targetFolder="." smallIcon="zZk4Pr" bigIcon="zZk4Pr">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="/usr/include/freetype2&#10;/usr/include/gtk-3.0&#10;&#10;"/>
+        <CONFIGURATION isDebug="0" name="Release" headerPath="/usr/include/freetype2&#10;/usr/include/gtk-3.0&#10;&#10;"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="e:\juce\modules"/>
+        <MODULEPATH id="juce_data_structures" path="e:\juce\modules"/>
+        <MODULEPATH id="juce_events" path="e:\juce\modules"/>
+        <MODULEPATH id="juce_graphics" path="e:\juce\modules"/>
+        <MODULEPATH id="juce_gui_basics" path="e:\juce\modules"/>
+        <MODULEPATH id="juce_gui_extra" path="e:\juce\modules"/>
+      </MODULEPATHS>
+    </LINUX_MAKE>
   </EXPORTFORMATS>
 </JUCERPROJECT>
